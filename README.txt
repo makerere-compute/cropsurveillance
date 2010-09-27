@@ -5,4 +5,11 @@ Functionality in development includes:
 - mapping the extent of viral spread
 - client and server code for deployment
 
-To run matlab code, edit setpaths.m with the directory of the data repository containing leaf images and annotations.
+--------------------------------------------------
+
+Installation requirements: third party code for calculating SIFT and SURF features needs to be installed. See the file 3rdparty/README.txt
+
+--------------------------------------------------
+
+This source is provided under the Creative Commons Attribution 3.0 Unported License
+http://creativecommons.org/licenses/by/3.0/    
