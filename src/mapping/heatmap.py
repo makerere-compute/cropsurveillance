@@ -1,34 +1,53 @@
 import numpy
 import infpy.gp as gp 
 import pylab
+import mapsettings
+import geodataIO
 
-# Gaussian process hyperpriors (length scales - the higher the number, the smoother the map)
-theta = [.5, .5]
+def updateheatmap():
+    """
+    Read all the recorded samples of plant disease, calculate the interpolated 
+    density across a grid and save the results.
+    """
+    p = mapsettings.getparams()
+    mapheight = p['mapheight']
+    mapwidth = p['mapwidth']
+    
+    # observed data: X is lon/lat coordinates, D is level of disease
+    [X,D] = geodataIO.getpointdata()
+    # geographical locations of pixels
+    pixel_longitude = numpy.arange(min(p['longitude_limit']),
+                        max(p['longitude_limit']),
+                            numpy.diff(p['longitude_limit'])/p['mapwidth'])
+    pixel_latitude = numpy.arange(min(p['latitude_limit']),
+                        max(p['latitude_limit']),
+                            numpy.diff(p['latitude_limit'])/p['mapheight'])
+    
+    # calculate the heat map
+    kernel = gp.SquaredExponentialKernel(p['theta'],dimensions=2)
+    G = gp.GaussianProcess(X, D, kernel)
+    M = numpy.zeros([mapheight, mapwidth])
+    alpha = numpy.zeros([mapheight, mapwidth])
+    
+    for x in range(0,mapwidth):
+        for y in range(0,mapheight):
+            lon = pixel_longitude[x]
+            lat = pixel_latitude[y]
+            x_star = numpy.array([[lon, lat]])
+            mu,S,ll = G.predict(x_star)
+            M[y][x] = mu
+            alpha[y][x] = 1/(S + 10**-10)
 
-# observed data: x is lon/lat coordinates, y is level of disease
-X = numpy.array([[32.1, .6], [32.2, .5], [32.8,.3], [32.7,.9], [32.6,.9], [32.9,.1]])
-Y = numpy.array([2.5, 2., 0., 0., 1., 1.5])
+    # for the moment, linear scaling for alpha
+    
+    
+    if not p['filename']==None:
+        geodataIO.writedensities(M, alpha, pixel_longitude, 
+                                 pixel_latitude, p['filename'])
 
-# heat map extent, resolution, and geographical locations of pixels
-longitude_limit = [32., 33.]
-latitude_limit = [.5, 1.5]
-mapwidth, mapheight = 30, 30
-pixel_longitude = numpy.arange(min(longitude_limit),max(longitude_limit),numpy.diff(longitude_limit)/mapwidth)
-pixel_latitude = numpy.arange(min(latitude_limit),max(latitude_limit),numpy.diff(latitude_limit)/mapheight)
+    return M,alpha
 
-# calculate the heat map
-kernel = gp.SquaredExponentialKernel(theta,dimensions=2)
-G = gp.GaussianProcess(X, Y, kernel)
-M = numpy.zeros([mapheight, mapwidth])
-
-for x in range(0,mapwidth):
-    for y in range(0,mapheight):
-        lon = pixel_longitude[x]
-        lat = pixel_latitude[y]
-        x_star = numpy.array([[lon, lat]])
-        mu,S,ll = G.predict(x_star)
-        M[y][x] = mu
-
-# plot predictions
-pylab.matshow(M)
-pylab.show()
+if __name__=='__main__':
+    M,alpha = updateheatmap()
+    pylab.matshow(M)
+    pylab.show()
