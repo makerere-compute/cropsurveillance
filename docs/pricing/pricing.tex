@@ -1,0 +1,102 @@
+%% LyX 1.6.5 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage[a4paper]{geometry}
+\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm}
+\setlength{\parskip}{\medskipamount}
+\setlength{\parindent}{0pt}
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\rhead{Notes\ on\ pricing\ of\ crop\ monitoring\ data,\ \today}
+
+\makeatother
+
+\usepackage{babel}
+
+\begin{document}
+
+\section*{The problem}
+
+We want to monitor the spread of viral disease among staple crops.
+Interested in two things: incidence and severity.
+
+Survey workers can provide geotagged images of crops, in return for
+micropayments of airtime or mobile money.
+
+Use changing prices (as a function of location) to create the right
+bias for data collection.
+
+Assume computer vision software on the survey device can reject images
+which have low information (not of a leaf/out of focus).
+
+
+\section*{The model}
+
+Start with a Gaussian process with squared exponential covariance
+(lat,lon,time). 
+
+Advantages: posterior is centred around the data points. Disadvantages:
+could become computationally expensive with large numbers of datapoints.
+
+Two coupled models: severity and incidence. (Are these two things
+related? Or conditionally independent given the observations?)
+
+Nature of observations: tropical agriculture standards for levels
+of disease severity, CMD symptoms are quantified from 0 (no damage)
+to 5 (very damaged). Seems easiest to use these; a lot of thought
+has gone into this quantification. Alternatives: degree of belief
+that plant is infected, problematic because this tops out.
+
+Underlying severity: use the data space directly (range 0-5), or use
+range $+\infty$ to$-\infty$ and squash through a logistic sigmoid?
+
+Incidence is more complicated: this is a partially observed point
+process. The underlying state could either be something like a Poisson
+rate (probability per unit area that there is an infected plant),
+or a probability that a given plant is infected.
+
+We get a posterior $\mu,S|x_{*},x,y$ . The covariance $S$ is used
+in the pricing.
+
+When using a temporal model, to make this stable we need to work out
+which points past in time to {}``forget''.
+
+
+\section*{Pricing data collection}
+
+We want images from the places where our uncertainty is highest (about
+either severity or incidence). Therefore we price according to uncertainty.
+Active learning.
+
+We are more interested in cases of disease than non-disease (how can
+this be quantified?). 
+
+We are more interested in areas where there is high cassava cultivation.
+
+If GP mean is zero, then non-zero observations will have high surprise.
+
+Price is therefore at the minimum a function of two covariances (incidence/severity),
+cassava cultivation density.
+
+
+\section*{Practical issues}
+
+How often should the pricing be updated? If someone takes a picture
+of a plant, we don't want too many more pictures of that plant. We
+want that person to move away. Ideally we would recalculate the pricing
+there and then. But person may not have network to communicate there
+and then. Would also have to communicate the updated map to everyone
+using the sytem. Possibly download some global pricing map each day,
+then local computations adjust the price. This doesn't stop several
+people photographing the same plant though and expecting the same
+price.
+
+Creating a market might mean the survey becomes autonomous; people
+buy location aware survey phones with microcredit, then make earnings
+to pay off the loans.
+\end{document}
