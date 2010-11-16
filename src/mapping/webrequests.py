@@ -65,3 +65,5 @@ def fetchdata():
     geodata['D']=numpy.array(D)
 
     return geodata
+#this function will save data to appengine
+def savedata():
