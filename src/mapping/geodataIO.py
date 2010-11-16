@@ -3,7 +3,7 @@ import csv
 import numpy
 from PIL import Image
 import datetime
-
+import webrequests
 def getpointdata():
     """
     Return a list of samples which have been made. 
@@ -12,14 +12,15 @@ def getpointdata():
     # TODO: currently hard coded test data, should pick this up from the DB.
     # TODO: add time of sample.
     # TODO: add disease class of sample.
-
+    geodata=webrequests.fetchdata()
     # X is a list of coordinates [longitude. latitude]
-    X = numpy.array([[32.1, .6], [32.2, .5], [32.8,.3], [32.7,.9],
-                    [32.6,.9], [32.9,.1]])
-
+    # eg: X = numpy.array([[32.1, .6], [32.2, .5], [32.8,.3], [32.7,.9],
+    #[32.6,.9], [32.9,.1]])
+    X=geodata['lonlat']
     # D are the corresponding disease rates (e.g. 0-5)
-    D = numpy.array([2, 3, 0, 2, 4, 1])
-
+    #D = numpy.array([2, 3, 0, 2, 4, 1])
+    D=geodata['D']
+    
     return X,D
 
 def intensity_to_rgb(x,upperlim):
