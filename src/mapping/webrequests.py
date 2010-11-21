@@ -7,7 +7,7 @@ import numpy
 
 def fetchdata():
     geodata={}
-     #development URL
+    #development URL
     #url = "http://127.0.0.1:8888/formSubmissionsV?odkId=new_form1"
     #online URL
     url = "http://cropmonitoring.appspot.com/formSubmissionsV?odkId=new_form1"
@@ -67,3 +67,4 @@ def fetchdata():
     return geodata
 #this function will save data to appengine
 def savedata():
+    return 1

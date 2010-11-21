@@ -1,6 +1,4 @@
-import numpy
 import infpy.gp as gp 
-import pylab
 import mapsettings
 import geodataIO
 

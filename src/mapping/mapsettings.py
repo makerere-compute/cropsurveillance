@@ -27,4 +27,3 @@ def getparams():
     # maximum severity possible
     settings['maxseverity'] = 5
     return settings
-

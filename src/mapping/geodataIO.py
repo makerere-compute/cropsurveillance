@@ -1,9 +1,9 @@
 import mapsettings
-import csv
 import numpy
 from PIL import Image
 import datetime
 import webrequests
+import database;
 def getpointdata():
     """
     Return a list of samples which have been made. 
@@ -14,7 +14,7 @@ def getpointdata():
     # TODO: add disease class of sample.
     geodata=webrequests.fetchdata()
     # X is a list of coordinates [longitude. latitude]
-    # eg: X = numpy.array([[32.1, .6], [32.2, .5], [32.8,.3], [32.7,.9],
+    #X = numpy.array([[32.1, .6], [32.2, .5], [32.8,.3], [32.7,.9],
     #[32.6,.9], [32.9,.1]])
     X=geodata['lonlat']
     # D are the corresponding disease rates (e.g. 0-5)
@@ -96,11 +96,15 @@ def savetiles(G):
             pilImage = Image.fromarray(tileimg)
             filename = 'tile_%d_%d.png' % (x,y)
             pilImage.save(filename)
-
+            #save the tiles tp database          
+            
+            database.savetile(0, tile_lon_ul[0], tile_lat_ul[0], tile_lon_lr[0], tile_lat_lr[0], pilImage);
+            
             # create XML element with tile details
             xml_element = '<tile lon_ul="%f" lat_ul="%f" lon_lr="%f" lat_lr="%f" filename="%s" />\n' % (tile_lon_ul, tile_lat_ul, tile_lon_lr, tile_lat_lr, filename)
             xml_string.append(xml_element)
-
+    #we have finished saving the tiles so lets close the connection to the database
+    database.closeConnection()
     xml_string.append('</tilelist>\n')
     xml_file = file('tiles.xml','w')
     for s in xml_string:
