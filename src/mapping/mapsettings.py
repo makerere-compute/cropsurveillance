@@ -12,14 +12,15 @@ def getparams():
     settings['ntiles'] = [1, 1]
 
     # how many pixels per tile
-    settings['tilepixels'] = [50,50]
+    settings['tilepixels'] = [100,100]
 
     # how to scale inverse variance to an alpha value
-    settings['alphascaling'] = 8 
+    settings['alphascaling'] = 20 
 
-    # Gaussian process hyperpriors (length scales - the higher the number,
-    # the smoother the map)
-    settings['theta'] = [.001, .001]
+    # Gaussian process hyperpriors (theta is the length scales - the higher
+    # the number, the smoother the map. Sigma is observation noise.)
+    settings['theta'] = [.002, .002]
+    settings['sigma'] = [.1]
 
     # filename for calculated density points
     settings['filename'] = 'heatmappoints.csv'

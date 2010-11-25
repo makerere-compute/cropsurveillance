@@ -13,7 +13,8 @@ def updateheatmap():
     [X,D] = geodataIO.getpointdata()
 
     # construct a Gaussian process model given the observed data
-    kernel = gp.SquaredExponentialKernel(p['theta'],dimensions=2)
+    kernel = gp.SquaredExponentialKernel(p['theta'],dimensions=2) + gp.noise_kernel(p['sigma'])
+
     G = gp.GaussianProcess(X, D, kernel)
 
     # produce the heatmap tiles

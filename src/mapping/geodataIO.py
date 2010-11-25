@@ -3,7 +3,7 @@ import numpy
 from PIL import Image
 import datetime
 import webrequests
-import database
+#import database
 import pickle
 
 def getpointdata():
@@ -48,9 +48,25 @@ def intensity_to_rgb(x,upperlim):
     '''
     x = max(0,x)
     x = min(upperlim,x)
-    r = 255*(x/upperlim)
-    g = 0
-    b = 255*(1. - x/upperlim)
+
+    # x corresponds to hue -- blue for a low value, red for a high value
+    if x<upperlim*0.25:
+        r = 0
+        g = x/(upperlim*0.25) * 255
+        b = 255
+    elif x<upperlim*0.5:
+        r = 0
+        g = 255
+        b = ((upperlim*0.5)-x)/(upperlim*0.25) * 255
+    elif x<upperlim*0.75:
+        r = (x-(upperlim*0.5))/(upperlim*0.25) * 255
+        g = 255
+        b = 0
+    else:
+        r = 255
+        g = (upperlim-x)/(upperlim*0.25) * 255
+        b = 0
+
     return r,g,b
 
 def savetiles(G):
