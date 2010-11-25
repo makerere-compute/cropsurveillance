@@ -3,24 +3,43 @@ import numpy
 from PIL import Image
 import datetime
 import webrequests
-import database;
+import database
+import pickle
+
 def getpointdata():
     """
     Return a list of samples which have been made. 
     Samples should have longitude, latitude, disease class, disease rate and timestamp. 
     """
-    # TODO: currently hard coded test data, should pick this up from the DB.
-    # TODO: add time of sample.
-    # TODO: add disease class of sample.
-    geodata=webrequests.fetchdata()
+    p = mapsettings.getparams()
+
+    if p['use_cached_geodata']:
+        pkl_file = open(p['geodata_cache_filename'])
+        geodata = pickle.load(pkl_file)
+        pkl_file.close()
+    else:
+        geodata=webrequests.fetchdata()
+
     # X is a list of coordinates [longitude. latitude]
-    #X = numpy.array([[32.1, .6], [32.2, .5], [32.8,.3], [32.7,.9],
-    #[32.6,.9], [32.9,.1]])
     X=geodata['lonlat']
+
     # D are the corresponding disease rates (e.g. 0-5)
-    #D = numpy.array([2, 3, 0, 2, 4, 1])
     D=geodata['D']
-    
+
+    '''
+    X = numpy.array([[ 32.63669052,   0.51917757],
+       [ 32.63670452,   0.51908315],
+       [ 32.63676197,   0.51908591],
+       [ 32.63673679,   0.51907999],
+       [ 32.636732  ,   0.519077  ],
+       [ 32.63674421,   0.51906578],
+       [ 32.63675059,   0.519048  ],
+       [ 32.63674697,   0.51905069],
+       [ 32.63672599,   0.51906909],
+       [ 32.63653416,   0.51928972]]) 
+    D = numpy.array([4, 5, 5, 3, 3, 2, 1, 1, 1, 1])
+    '''
+
     return X,D
 
 def intensity_to_rgb(x,upperlim):
@@ -94,19 +113,26 @@ def savetiles(G):
 
             # save as an image
             pilImage = Image.fromarray(tileimg)
-            filename = 'tile_%d_%d.png' % (x,y)
-            pilImage.save(filename)
+            if p['save_tile_image_files']:
+                filename = '%s/tile_%d_%d.png' % (p['tile_directory'],x,y)
+                pilImage.save(filename)
+
             #save the tiles tp database          
-            
-            database.savetile(0, tile_lon_ul[0], tile_lat_ul[0], tile_lon_lr[0], tile_lat_lr[0], pilImage);
+            if p['save_tile_images_in_db']:
+                database.savetile(0, tile_lon_ul[0], tile_lat_ul[0], tile_lon_lr[0],
+                                  tile_lat_lr[0], pilImage);
             
             # create XML element with tile details
             xml_element = '<tile lon_ul="%f" lat_ul="%f" lon_lr="%f" lat_lr="%f" filename="%s" />\n' % (tile_lon_ul, tile_lat_ul, tile_lon_lr, tile_lat_lr, filename)
             xml_string.append(xml_element)
+
     #we have finished saving the tiles so lets close the connection to the database
-    database.closeConnection()
+    if p['save_tile_images_in_db']:
+        database.closeConnection()
+
     xml_string.append('</tilelist>\n')
-    xml_file = file('tiles.xml','w')
+
+    xml_file = file('%s/%s' % (p['tile_directory'], p['tile_metadata_filename']),'w')
     for s in xml_string:
         xml_file.write(s)
     xml_file.close()

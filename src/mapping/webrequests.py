@@ -4,8 +4,11 @@
 
 import urllib2
 import numpy
+import mapsettings
+import pickle
 
 def fetchdata():
+    p = mapsettings.getparams()
     geodata={}
     #development URL
     #url = "http://127.0.0.1:8888/formSubmissionsV?odkId=new_form1"
@@ -59,12 +62,18 @@ def fetchdata():
         lonlat[i]=numpy.array([longitude,latitude])
         
 
-    print D[0]             
-        #self.response.out.write(rate);      
+    #print D[0]             
+    #self.response.out.write(rate);      
     geodata['lonlat']=numpy.array(lonlat)
     geodata['D']=numpy.array(D)
 
+    # cache the data
+    pkl_file = open(p['geodata_cache_filename'],'wb')
+    pickle.dump(geodata,pkl_file)
+    pkl_file.close()
+
     return geodata
+
 #this function will save data to appengine
 def savedata():
     return 1
