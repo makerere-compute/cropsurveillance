@@ -137,9 +137,11 @@ def savetiles(G):
             if p['save_tile_images_in_db']:
                 database.savetile(0, tile_lon_ul[0], tile_lat_ul[0], tile_lon_lr[0],
                                   tile_lat_lr[0], pilImage);
+            #TODO zoom level of the tile
+            zoomlevel=0.0
             
             # create XML element with tile details
-            xml_element = '<tile lon_ul="%f" lat_ul="%f" lon_lr="%f" lat_lr="%f" filename="%s" />\n' % (tile_lon_ul, tile_lat_ul, tile_lon_lr, tile_lat_lr, filename)
+            xml_element = '<tile zoom="%f" lon_ul="%f" lat_ul="%f" lon_lr="%f" lat_lr="%f" filename="%s" />\n' % (zoomlevel, tile_lon_ul, tile_lat_ul, tile_lon_lr, tile_lat_lr, filename)
             xml_string.append(xml_element)
 
     #we have finished saving the tiles so lets close the connection to the database

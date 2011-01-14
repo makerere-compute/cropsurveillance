@@ -1,0 +1,153 @@
+<html>
+<head>
+    <title>Heatmap Local Tiles</title>
+    <link rel="stylesheet" href="../../3rdparty/openlayers/style.css" type="text/css" />
+      <link rel="stylesheet" href="../../3rdparty/theme/default/google.css" type="text/css">
+        <link rel="stylesheet" href="style.css" type="text/css">
+        <script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <!-- bring in the OpenLayers javascript library
+         (here we bring it from the remote site, but you could
+         easily serve up this javascript yourself) -->
+    <script src="../../3rdparty/openlayers/OpenLayers.js"></script>
+ 
+    <!-- bring in the OpenStreetMap OpenLayers layers.
+         Using this hosted file will make sure we are kept up
+         to date with any necessary changes -->
+    <script src="../../3rdparty/openstreetmap/OpenStreetMap.js"></script>
+ 
+    <script type="text/javascript">
+/* creates an XMLHttpRequest instance */
+function createXmlHttpRequestObject()
+{
+    // will store the reference to the XMLHttpRequest object
+    var xmlHttp;
+    // this should work for all browsers except IE6 and older
+    try
+    {
+        // try to create XMLHttpRequest object
+        xmlHttp = new XMLHttpRequest();
+    }
+    catch(e)
+    {
+        // assume IE6 or older
+        var XmlHttpVersions = new Array("MSXML2.XMLHTTP.6.0",
+            "MSXML2.XMLHTTP.5.0",
+            "MSXML2.XMLHTTP.4.0",
+            "MSXML2.XMLHTTP.3.0",
+            "MSXML2.XMLHTTP",
+            "Microsoft.XMLHTTP");
+        // try every prog id until one works
+        for (var i=0; i<XmlHttpVersions.length && !xmlHttp; i++)
+        {
+            try
+            {
+                // try to create XMLHttpRequest object
+                xmlHttp = new ActiveXObject(XmlHttpVersions[i]);
+            }
+            catch (e) {}
+        }
+    }
+    // return the created object or display an error message
+    if (!xmlHttp)
+        alert("Error creating the XMLHttpRequest object.");
+    else
+        return xmlHttp;
+}
+function init(){
+  document.getElementById("map").innerHTML="";
+    map= new OpenLayers.Map()
+	map = new OpenLayers.Map("map", {
+		controls: [
+			new OpenLayers.Control.Navigation(),
+			new OpenLayers.Control.PanZoomBar(),
+			new OpenLayers.Control.ScaleLine(),
+			new OpenLayers.Control.LayerSwitcher()
+		],
+		maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,20037508.34,20037508.34),
+		maxResolution: 156543.0399,
+		numZoomLevels: 22,
+		units: 'm',
+		projection: new OpenLayers.Projection("EPSG:4326"),
+		displayProjection: new OpenLayers.Projection("EPSG:4326")
+	});
+
+	//layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+	//map.addLayer(layerMapnik);
+
+
+         //  map = new OpenLayers.Map('map');
+
+           //map.addControl( new OpenLayers.Control.LayerSwitcher() );
+
+
+             var gsat = new OpenLayers.Layer.Google(
+        "Google Satellite",
+        {type: google.maps.MapTypeId.SATELLITE, numZoomLevels: 22}
+    );
+    var gphy = new OpenLayers.Layer.Google(
+        "Google Physical",
+        {type: google.maps.MapTypeId.TERRAIN, visibility: false}
+    );
+    var gmap = new OpenLayers.Layer.Google(
+        "Google Streets", // the default
+        {numZoomLevels: 20, visibility: false}
+    );
+    var ghyb = new OpenLayers.Layer.Google(
+        "Google Hybrid",
+        {type: google.maps.MapTypeId.HYBRID, numZoomLevels: 22, visibility: false}
+    );
+
+
+           map.addLayers([gphy, gmap, ghyb, gsat]);
+
+          //  map.setCenter(new OpenLayers.LonLat(32.5655556,0.3155556), 9);
+            
+
+
+
+
+    var options = {numZoomLevels: 25,isBaseLayer:false};
+            var graphic = new OpenLayers.Layer.Image(
+                'heatmap','tile_0_0.png',
+                new OpenLayers.Bounds(-180, -88.759, 180, 88.759),
+                new OpenLayers.Size(580, 288),
+                options
+            );
+            
+            graphic.events.on({
+                loadstart: function() {
+                    OpenLayers.Console.log("loadstart");
+                },
+                loadend: function() {
+                    OpenLayers.Console.log("loadend");
+                }
+            });
+
+
+	
+	map.addLayer(graphic);
+
+
+	var lon   = 32.5655556;
+	var lat   = 0.3155556;
+	var zoom  = 13;
+
+	var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject());
+	map.setCenter (lonLat, zoom);
+
+        
+
+        }
+
+    </script>
+</head>
+ 
+<!-- body.onload is called once the page is loaded (call the 'init' function) -->
+<body onload="init();">
+ 
+    <!-- define a DIV into which the map will appear. Make it take up the whole window -->
+    <div style="width:100%; height:100%" id="map"></div>
+ 
+</body>
+ 
+</html>
