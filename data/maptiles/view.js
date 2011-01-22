@@ -1,3 +1,7 @@
+/**
+*This Script is will be used for displaying the maps
+**/
+
 function load()
 {
     var pointCenter = new GLatLng(0.4955556,32.5899586);
@@ -24,9 +28,18 @@ function load()
         map.addOverlay(new GGroundOverlay(image, new GLatLngBounds(pointSW, pointNE)));
 
     }
-//    var pointSW = new GLatLng(37.409299,-122.107201);
-//    var pointNE = new GLatLng(37.433839,-122.060852);
-//    var groundOverlay = new GGroundOverlay("tile_0_0.png", new GLatLngBounds(pointSW, pointNE));
-//    map.addOverlay(new GGroundOverlay("tile_0_0.png", new GLatLngBounds(pointSW, pointNE)));
+    GEvent.addListener(map, "mousemove", function(latlng) {
+        document.getElementById('div_coordinates').innerHTML =
+        'Div Coordinates: ' +
+        map.fromLatLngToContainerPixel(latlng).x + ', ' +
+        map.fromLatLngToContainerPixel(latlng).y;
+
+ 
+        document.getElementById('geo_coordinates').innerHTML =
+        'Geographical Coordinates: ' + latlng.lat() + ', ' + latlng.lng();
+
+   
+
+    });
              
 }
