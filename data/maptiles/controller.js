@@ -1,0 +1,1 @@
+mapObj=new geomap();
