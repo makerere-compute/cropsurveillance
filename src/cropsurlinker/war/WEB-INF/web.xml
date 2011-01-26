@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	version="2.5">
+	<servlet>
+		<servlet-name>Cropsurlinker</servlet-name>
+		<servlet-class>org.fcitmuk.mlgroup.CropsurlinkerServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Cropsurlinker</servlet-name>
+		<url-pattern>/cropsurlinker</url-pattern>
+	</servlet-mapping>
+	
+	<servlet>
+		<servlet-name>xmlupload</servlet-name>
+		<servlet-class>org.fcitmuk.mlgroup.XmlUploader</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>xmlupload</servlet-name>
+		<url-pattern>/xmlupload</url-pattern>
+	</servlet-mapping>
+	
+	
+	<servlet>
+		<servlet-name>upload</servlet-name>
+		<servlet-class>org.fcitmuk.mlgroup.Upload</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>upload</servlet-name>
+		<url-pattern>/upload</url-pattern>
+	</servlet-mapping>
+	
+	
+		<servlet>
+		<servlet-name>imageupload</servlet-name>
+		<servlet-class>org.fcitmuk.mlgroup.ImageUpload</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>imageupload</servlet-name>
+		<url-pattern>/imageupload</url-pattern>
+	</servlet-mapping>
+	
+	<servlet>
+		<servlet-name>serveimage</servlet-name>
+		<servlet-class>org.fcitmuk.mlgroup.ServeImage</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>serveimage</servlet-name>
+		<url-pattern>/serveimage</url-pattern>
+	</servlet-mapping>
+	
+	
+	<servlet>
+		<servlet-name>uploadblob</servlet-name>
+		<servlet-class>org.fcitmuk.mlgroup.UploadBlob</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>uploadblob</servlet-name>
+		<url-pattern>/uploadblob</url-pattern>
+	</servlet-mapping>
+	
+	<servlet>
+		<servlet-name>blobuploadredirect</servlet-name>
+		<servlet-class>org.fcitmuk.mlgroup.Blobuploadredirect</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>blobuploadredirect</servlet-name>
+		<url-pattern>/blobuploadredirect</url-pattern>
+	</servlet-mapping>
+	
+		<servlet>
+		<servlet-name>serveapps</servlet-name>
+		<servlet-class>org.fcitmuk.mlgroup.ServeApps</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>serveapps</servlet-name>
+		<url-pattern>/serveapps</url-pattern>
+	</servlet-mapping>
+	
+	
+	
+	
+	<servlet>
+		<servlet-name>tilelist</servlet-name>
+		<servlet-class>org.fcitmuk.mlgroup.ListTileServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>tilelist</servlet-name>
+		<url-pattern>/tilelist</url-pattern>
+	</servlet-mapping>
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>upload</web-resource-name>
+			<url-pattern>/upload</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>*</role-name>
+		</auth-constraint>
+	</security-constraint>
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+	</welcome-file-list>
+</web-app>

@@ -1,0 +1,43 @@
+/* 
+	project:  abstract studio template
+	author:   luka cvrk (www.solucija.com) 
+*/
+
+*{ margin: 0; padding: 0; }* 
+body { font: .74em Tahoma, Arial, "Trebuchet MS", Tahoma, sans-serif; line-height: 1.64em; background: #fff; color: #444; }
+a { color: #299DCA;	background: inherit; text-decoration: none; }
+a:hover { color: #808080; background: inherit; }
+.blue { color: #299DCA; }
+.white { color: #fff; }
+p { margin: 0 0 15px 0; }
+h1 { font: normal 2.4em Georgia, Arial, Sans-Serif; margin: 15px 0 0 5px; }
+h1 a:hover { color: #E4FFD3; background: inherit; }
+h2 { font: bold 1.6em Arial, Sans-Serif; margin: 0 0 12px; }
+h4 { color: #808080; background: inherit; font-weight: normal; font-size: .9em; }
+#content { width: 920px; margin: 0 auto; }
+#logo { float: left; border-bottom: 5px solid #7DD0F1; height: 58px; width: 330px; }
+#menu { float: right; width: 584px; padding: 10px 0; margin: 19px 0 5px; border-bottom: 5px solid #e0e0e0; }
+#menu li { font-size: 1.1em; display: inline; }
+#menu li a { padding: 17px 15px 0 10px; margin: 0 45px 0 0; background: #fff url(../images/menuarrow.jpg) no-repeat 10px 5px; color: #808080; border-left: 1px solid #e0e0e0; }
+#menu li a:hover { color: #000; border-left: 1px solid #7DD0F1; }
+#intro { clear: both; background: #ccc url(../images/teaser.jpg) no-repeat; color: #333; height: 150px; padding: 35px 0 0 20px; }
+	#intro h1 { margin: 0; background: #666666 url(../images/h1bg.jpg) repeat-x bottom; display: inline;  color: #7DD0F1; padding: 2px 5px; }
+	#intro p { margin: 0; color: #808080; font-weight: bold; font-size: .9em; }
+	#login { font-size: .9em; margin: 45px 0 0; }
+	#login a { color: #616161; background: #8BE1FA; padding: 4px 20px 6px; border-bottom: 1px solid #616161; }
+	#login a:hover { color: #fff; background: #8BE1FA url(images/loginhover.gif) no-repeat; }
+#left { clear: left; float: left; width: 550px; padding: 0 34px 0 5px; margin: 15px 0 15px; }
+	#left img { border: 1px solid #ccc; padding: 1px; float: left; margin: 0 15px 5px 0;}
+	#articles { margin: 40px 0 0 0; }
+	#articles li  { border-top: 1px solid #cecece; list-style: none; float: left; width: 245px; background: #eee url(../images/newslist.jpg) repeat-x bottom; padding: 4px 8px; margin: 0 15px 0 0;}
+		#articles li a { background: url(../images/menuarrow.jpg) no-repeat 0 5px; padding: 0 0 0 8px; }
+		#articles li.last { margin: 0; }
+#right { position: relative; top: -80px; margin: 0 15px 0 0; padding: 15px; float: right; width: 284px; font-size: .9em; background: #fff; }
+	#right img { border: 1px solid #ccc; padding: 1px; margin: 0 0 8px; }
+	#left a { background: #EFFCFF; }
+	#left h3 { border-bottom: 1px solid #eee; padding: 0 0 7px; margin: 0 0 15px 0; }
+	#right h2 { border-bottom: 1px solid #ccc; padding: 0 0 8px; }
+	#right .info { border: 1px solid #e0e0e0; background: #f4f4f4; padding: 8px; }
+#footer { clear: both; border-top: 1px solid #ccc; padding: 10px; margin: 0 0 5px; font-size: .9em; color: #9b9b9b; background: #fff; }
+	#footer a { color: #808080; background: #fff; font-weight: bold; }
+	.right{ float: right; padding: 7px 0 0 15px; }
