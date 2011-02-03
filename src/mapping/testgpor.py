@@ -1,3 +1,14 @@
+'''
+Sample script for the generation of disease heatmaps using
+Gaussian process ordinal regression.
+
+Requires the GPOR code:
+http://www.gatsby.ucl.ac.uk/~chuwei/code/gpor.tar
+to be unpacked to this directory:
+cropsurveillance/3rdparty/gpor/
+'''
+
+
 import pylab
 import subprocess
 import numpy
