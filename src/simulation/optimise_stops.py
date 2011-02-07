@@ -2,6 +2,8 @@ from gpor import *
 import numpy as np
 import numpy.random
 from simulatedisease import *
+import os.path
+import copy
 
 def utility(M,S,X):
     '''
@@ -44,6 +46,10 @@ def most_informative_stop(route,P, M,S,opts):
     properly account for uncertainty at all points on the map?
     Return: position (2d vector), dist_from_origin.
     '''
+    '''
+    This is one way to do it if the field is not uniform. Need a better way
+    to choose an arbitrary location if all places are equal though.
+    '''
     best_point_so_far = None
     best_score_so_far = 0
     value = 0
@@ -63,18 +69,19 @@ def most_informative_stop(route,P, M,S,opts):
                 best_point_so_far = current_point
                 dist_of_best_point_so_far = dist_to_current_segment + p
         dist_to_current_segment += segment_distance
-
+        
     return best_point_so_far, dist_of_best_point_so_far
 
-def sample_set_of_stop_points(route,P,M,S,D,opts):
+def sample_set_of_stop_points(route,P,M,S,k,X,D,opts):
     ''' Find a set of k points along route, which are maximally informative
     according to sampled data. 
     Return: array of distances from origin
     '''
-    k = opts['stops_per_group']
     stop_distances = []
     stop_positions = []
     for stop_num in range(k):
+        #pylab.matshow(S)
+        
         # find the next place to stop according to current estimate
         x, stop_distance = most_informative_stop(route,P,M,S,opts)
         stop_distances.append(stop_distance)
@@ -84,13 +91,13 @@ def sample_set_of_stop_points(route,P,M,S,D,opts):
         Dnew = take_model_samples(P,M,S,x,opts['nsamples_per_stop'])
 
         # recalculate the GP posterior
-        D = np.vstack((D,Dnew))
-        X = np.vstack((X,np.tile(x,(n,1))))
+        D = np.hstack((D,Dnew))
+        X = np.vstack((X,np.tile(x,(opts['nsamples_per_stop'],1))))
         P, M, S = gpor_2D_grid(X, D, opts['longitude_limit'], opts['latitude_limit'], opts['mapwidth'], opts['mapheight'])
 
     return np.array(stop_distances), np.array(stop_positions)
 
-def find_next_stop_point(route,M,S,k,X,D,opts):
+def find_next_stop_point(route,P,M,S,k,X,D,opts):
     ''' Find the next point by sampling a number of sets of points, then taking the mean
     of the closest point.
     ARGUMENTS
@@ -131,6 +138,42 @@ def find_next_stop_point(route,M,S,k,X,D,opts):
     remaining_route = np.vstack((current_point,route[i+1:,:]))
 
     return current_point, remaining_route
+    
+def do_optimised_survey(routes,P,M,S,X,D,opts):
+    survey_locations_by_group = {}  
+    for g in range(opts['num_groups']):
+        survey_locations_by_group[g] = []
+        
+    for k in range(opts['stops_per_group'],0,-1):
+        print('%d stops to go' % (k))
+        for g in range(opts['num_groups']):
+            print('group %d. %d observations' % (g,X.shape[0]))
+            
+            # calculate the next point on this route
+            next_point, remaining_route = find_next_stop_point(routes[g],P,M,S,k,X,D,opts)
+            routes[g] = remaining_route
+            survey_locations_by_group[g].append(next_point)
+            
+            # take samples at this location
+            Dnew = take_real_samples(Preal,next_point,opts['nsamples_per_stop'])
+            D = np.hstack((D,Dnew))
+            X = np.vstack((X,np.tile(next_point,(opts['nsamples_per_stop'],1))))  
+            
+            # update the model
+            P, M, S = gpor_2D_grid(X, D, opts['longitude_limit'], opts['latitude_limit'], opts['mapwidth'], opts['mapheight'])
+
+    return P,M,S,X,D,survey_locations_by_group
+
+def do_regular_survey():
+    # for each route find the total distance
+    
+    # find the positions evenly distributed along these routes
+    
+    # draw samples at each of these positions
+    
+    # update the model
+    
+    return P,M,S,X,D,survey_locations_by_group
 
 def sample_set_of_stops(routes,P,M,S,k,X,D,opts):
     ''' Get a set of points to stop at, performing . '''
@@ -148,11 +191,12 @@ if __name__=='__main__':
     opts['latitude_limit'] = (0.,99.)
     opts['mapwidth'] = 100
     opts['mapheight'] = 100
-    opts['nsamples_per_stop'] = 10 
+    opts['nsamples_per_stop'] = 4
     opts['num_groups'] = 3
     opts['total_survey_vertices'] = 30
-    opts['stops_per_group'] = 5
-    opts['initial_samples'] = 10
+    opts['stops_per_group'] = 3
+    opts['initial_samples'] = 5
+    opts['nsets_of_points'] = 2
 
     # simulate a new survey
     Preal,tmp = simulate_disease([opts['mapheight'],opts['mapwidth']])
@@ -160,9 +204,12 @@ if __name__=='__main__':
 
     # sample data at the origin
     D = take_real_samples(Preal,origin,opts['initial_samples'])
-    X = np.tile(origin,(opts['initial_samples'],1))
+    # if any categories are missing from the sample, add them here
+    missing_categories = np.array([np.setdiff1d(np.array([1,2,3,4,5]),D[0,:])])
+    D = np.hstack((D,missing_categories))
+    X = np.tile(origin,(opts['initial_samples']+len(missing_categories[0]),1))
     # add some noise to prevent numerical problems
-    #X = X + numpy.random.rand(opts['initial_samples'],2)
+    X = X + numpy.random.rand(X.shape[0],X.shape[1])
 
     # initial GP estimate given measurements at origin
     P, M, S = gpor_2D_grid(X, D, opts['longitude_limit'], opts['latitude_limit'], opts['mapwidth'], opts['mapheight'])
@@ -171,25 +218,32 @@ if __name__=='__main__':
 
     path_colours = ['r','g','b']
     path_linestyles = ['-','--','-.']
-
-    # visualise the selection of a number of points
-    for g in range(opts['num_groups']-2):
+    
+    # visualise selection of next point
+    P,M,S,X,D,survey_locations_by_group = do_optimised_survey(copy.deepcopy(routes),P,M,S,X,D,opts)
+    pylab.matshow(S) 
+    
+    for g in range(opts['num_groups']):
         pylab.plot(routes[g][:,1],routes[g][:,0],c=path_colours[g],ls=path_linestyles[g],linewidth=2)
-        stop_distances, stop_positions = sample_set_of_stop_points(routes[g],P,M,S,D,opts)
-        pylab.plot(stop_positions[:,1],stop_positions[:,0],'w+',markeredgewidth=5)
-
+        for k in range(opts['stops_per_group']):
+            pylab.plot(survey_locations_by_group[g][k][1],survey_locations_by_group[g][k][0],ls='None',marker='o',color=path_colours[g],markersize=10,markeredgewidth=2)            
+ 
+    '''
+    # visualise the selection of a number of points
+    for g in range(opts['num_groups']):
+        pylab.plot(routes[g][:,1],routes[g][:,0],c=path_colours[g],ls=path_linestyles[g],linewidth=2)
+        stop_distances, stop_positions = sample_set_of_stop_points(routes[g],P,M,S,opts['stops_per_group'],X,D,opts)
+        pylab.plot(stop_positions[:,1],stop_positions[:,0],ls='None',marker='o',color=path_colours[g],markersize=10,markeredgewidth=2)
+    '''
+    
     '''
     # visualise the effect of choosing the most informative point 
     for g in range(opts['num_groups']-2):
         pylab.plot(routes[g][:,1],routes[g][:,0],c=path_colours[g],ls=path_linestyles[g],linewidth=2)
         x, remaining_dist = most_informative_stop(routes[g],P,M,S,opts)
         pylab.plot(x[1],x[0],'w+',markeredgewidth=5)
+    '''
+    
     pylab.gca().set_xlim((0,100))
     pylab.gca().set_ylim((0,100))
-    '''
-
-    # calculate the utility of the resulting posterior against the latent field
-    
-    # calculate the map when many samples are made at uniform spacing. compare the utilities.
-    
-    # anything to vary -- try the total survey budget. with very high budget, sample everywhere, doesn't make any difference. with low budget could make more of a difference.
+    pylab.gray()

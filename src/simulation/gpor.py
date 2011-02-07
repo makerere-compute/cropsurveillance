@@ -16,6 +16,7 @@ import subprocess
 import numpy
 import csv
 import os
+import glob
 
 def write_gpor_array(N,filename):
     '''
@@ -44,19 +45,20 @@ def gpor_2D_grid(X, D, x1_limit, x2_limit, grid_width, grid_height):
 
     Return (M,S) the mean and variance matrices corresponding to this grid.
     '''
+    randkey = '%d_' % (int(numpy.random.rand()*(10**8)))
     gpor_executable_location = '../../3rdparty/gpor/gpor'
     pixel_longitude = numpy.arange(min(x1_limit),max(x1_limit),numpy.diff(x1_limit)/grid_width)
     pixel_latitude = numpy.arange(min(x2_limit),max(x2_limit),numpy.diff(x2_limit)/grid_height)
 
     # Output formatted data file - train data
-    trainfile = 'cassava_gpor_train.0'
+    trainfile = randkey + 'cassava_gpor_train.0'
     trainmat = numpy.hstack((X,D.transpose()))
     order = D.argsort()
     trainmat = trainmat[order[0]][:]
     write_gpor_array(trainmat,trainfile)
 
     # Output formatted data file - test data
-    testfile = 'cassava_gpor_test.0'
+    testfile = randkey + 'cassava_gpor_test.0'
     testmat = numpy.zeros([grid_height*grid_width,2])
     for x in range(0,grid_width):
         for y in range(0,grid_height):
@@ -70,18 +72,18 @@ def gpor_2D_grid(X, D, x1_limit, x2_limit, grid_width, grid_height):
     #p = subprocess.call([gpor_executable_location, '-G', 'cassava_gpor_train.0'])
 
     # this version suppresses the on-screen output from gpor
-    p = subprocess.call([gpor_executable_location, '-G', 'cassava_gpor_train.0'], stdout=open("/dev/null", "w"))
+    p = subprocess.call([gpor_executable_location, '-G', '-K', '0.01', randkey + 'cassava_gpor_train.0'], stdout=open("/dev/null", "w"))
 
     # Read in the predictions from gpor
-    reader_prob = csv.reader(open("cassava_gpor_test.0.prob", "rb"), delimiter=' ')
-    reader_conf = csv.reader(open("cassava_gpor_test.0.conf", "rb"), delimiter=' ')
+    reader_prob = csv.reader(open(randkey + "cassava_gpor_test.0.prob", "rb"), delimiter=' ')
+    reader_conf = csv.reader(open(randkey + "cassava_gpor_test.0.conf", "rb"), delimiter=' ')
 
     P = numpy.zeros([grid_height, grid_width, 5])
     M = numpy.zeros([grid_height, grid_width])
     S = numpy.zeros([grid_height, grid_width])
 
-    for y in range(0,grid_height):
-        for x in range(0,grid_width):
+    for x in range(0,grid_width):
+        for y in range(0,grid_height):
             row = reader_prob.next()
 
             # distribution over categories
@@ -97,9 +99,13 @@ def gpor_2D_grid(X, D, x1_limit, x2_limit, grid_width, grid_height):
             row_conf = reader_conf.next()
             conf = float(row_conf[0])
 
-            M[y][x] = mean
-            S[y][x] = conf
+            M[y,x] = mean
+            S[y,x] = conf
             P[y,x,:] = prob
+           
+    # tidy up the filespace
+    for tempfile in glob.glob(randkey+'*'):
+        os.remove(tempfile)
 
     return P, M, S
 
@@ -108,8 +114,8 @@ if __name__=='__main__':
 
     # Some example data points
     X = numpy.array([[ 20., 30.],
-       [17., 92.]]) 
-    D = numpy.array([[1, 2]])
+       [17., 92.], [18., 20.]]) 
+    D = numpy.array([[1, 2, 1]])
     
     # Calculate the predicted values across a grid 
     longitude_limit = (0.,99.)
@@ -121,8 +127,8 @@ if __name__=='__main__':
     pylab.matshow(M)
     
     for i in range(D.shape[1]):
-        x = (X[i][0] - longitude_limit[0])/(numpy.diff(longitude_limit)/mapwidth)
-        y = (X[i][1] - latitude_limit[0])/(numpy.diff(latitude_limit)/mapheight)
+        x = (X[i][1] - longitude_limit[0])/(numpy.diff(longitude_limit)/mapwidth)
+        y = (X[i][0] - latitude_limit[0])/(numpy.diff(latitude_limit)/mapheight)
         bbox_props = dict(boxstyle="square", fc="w", ec="w", alpha=0.5)
         s = '%d' % (int(D[0][i]))
         pylab.text(x,y,s,bbox=bbox_props)

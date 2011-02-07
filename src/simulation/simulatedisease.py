@@ -5,6 +5,7 @@ import scipy.stats
 import pylab
 import pickle
 import tsp
+import os.path
 
 def gauss_kern(size, sizey=None):
     """ Returns a normalized 2D gauss kernel array for convolutions """
@@ -20,12 +21,13 @@ def gauss_kern(size, sizey=None):
 def simulate_disease(field_size):
     ''' Return D, underlying distribution of disease at each point
     and M, modal disease rate at each point. '''
+    pickle_filename = 'simulationobjects.pkl'
     filter_size = 100
     field_size[0] += 2*filter_size
     field_size[1] += 2*filter_size
 
     use_stored_matrices = True 
-    if use_stored_matrices:
+    if use_stored_matrices and os.path.isfile(pickle_filename):
         pkl_file = open('simulationobjects.pkl', 'rb')
         M = pickle.load(pkl_file)
         S = pickle.load(pkl_file)
@@ -53,7 +55,7 @@ def simulate_disease(field_size):
                 D[y,x,:] = D[y,x,:]/sum(D[y,x,:])
 
         # store the results for quick execution later 
-        output = open('simulationobjects.pkl', 'wb')
+        output = open(pickle_filename, 'wb')
         pickle.dump(M,output)
         pickle.dump(S,output)
         pickle.dump(D,output)
