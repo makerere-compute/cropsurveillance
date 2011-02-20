@@ -9,6 +9,7 @@ import logging
 def kl_div(a,b):
     ''' KL divergence between two vectors '''
     return sum(np.multiply(a,np.log(a/b)))
+
 def utility(P,Preal):
     '''
     Calculate the utility of GP estimate given by mean M and variance S, compared
@@ -39,7 +40,7 @@ def take_model_samples(P, M,S,x,n):
     # What does the confidence value mean?
     # Should be sampling underlying function and then calculating likelihoods.
     samples =  np.nonzero(numpy.random.multinomial(1,P[x[0],x[1],:],(n,1)))[2] 
-    samples = samples + 1
+    samples = samples + 1 # multinomial fn is 0-indexed
     return np.array([samples])
 
 
@@ -48,6 +49,24 @@ def euc_dist(a,b):
     delta = a-b
     dist = np.sqrt(np.dot(delta,delta))
     return dist
+
+def all_points_on_routes(routes):
+    ''' Return an Nx2 vector with all the points on any route '''
+    X = numpy.array(numpy.round(routes[0][0,:]))
+    for r in range(len(routes)):
+        route = routes[r]
+        for i in range(len(route)-1):
+            # divide this segment into points to sample
+            segment_vector = route[i+1,:] - route[i,:]
+            segment_distance = euc_dist(route[i+1,:], route[i,:])
+            npoints = int(segment_distance)
+            delta = segment_vector/npoints
+            for p in range(npoints):
+                current_point = route[i,:] + p*delta
+                X = numpy.vstack((X,numpy.round(current_point)))
+
+    return X
+
 
 def most_informative_stop(route,P, M,S,opts):
     ''' What is the point along the route (adjacent line segments) which is most informative
@@ -88,6 +107,8 @@ def sample_set_of_stop_points(route,P,M,S,k,X,D,opts):
     '''
     stop_distances = []
     stop_positions = []
+    routes = {}
+    routes[0] = route
     for stop_num in range(k):
         #pylab.matshow(S)
         
@@ -102,12 +123,13 @@ def sample_set_of_stop_points(route,P,M,S,k,X,D,opts):
         # recalculate the GP posterior
         D = np.hstack((D,Dnew))
         X = np.vstack((X,np.tile(x,(opts['nsamples_per_stop'],1))))
-        P, M, S = gpor_2D_grid(X, D, opts['longitude_limit'], opts['latitude_limit'], opts['mapwidth'], opts['mapheight'])
+        P, M, S = gpor_2D_grid(X, D, opts['longitude_limit'], opts['latitude_limit'], opts['mapwidth'], opts['mapheight'],all_points_on_routes(routes))
 
     return np.array(stop_distances), np.array(stop_positions)
 
 def find_next_stop_point(route,P,M,S,k,X,D,opts):
-    ''' Find the next point by sampling a number of sets of points, then taking the mean
+    ''' 
+    Find the next point by sampling a number of sets of points, then taking the mean
     of the closest point.
     ARGUMENTS
     route: list of vertices on the route, from current position to destination
@@ -169,8 +191,10 @@ def do_optimised_survey(routes,Preal,P,M,S,X,D,opts):
             X = np.vstack((X,np.tile(next_point,(opts['nsamples_per_stop'],1))))  
             
             # update the model
-            P, M, S = gpor_2D_grid(X, D, opts['longitude_limit'], opts['latitude_limit'], opts['mapwidth'], opts['mapheight'])
+            P, M, S = gpor_2D_grid(X, D, opts['longitude_limit'], opts['latitude_limit'], opts['mapwidth'], opts['mapheight'],all_points_on_routes(routes))
 
+    # last model update across entire grid
+    P, M, S = gpor_2D_grid(X, D, opts['longitude_limit'], opts['latitude_limit'], opts['mapwidth'], opts['mapheight'])
     return P,M,S,X,D,survey_locations_by_group
     
 def position_along_route(route,dist):
@@ -257,7 +281,8 @@ def compare_multiple_surveys():
     opts['num_groups'] = 3
     opts['total_survey_vertices'] = 30
     opts['initial_samples'] = 5
-    opts['nsets_of_points'] = 5
+    opts['nsets_of_points'] = 2
+    opts['num_disease_categories'] = 2
 
     # simulate a new survey
     Preal,tmp = simulate_disease([opts['mapheight'],opts['mapwidth']])
@@ -267,33 +292,59 @@ def compare_multiple_surveys():
     D = take_real_samples(Preal,origin,opts['initial_samples'])
     
     # if any categories are missing from the sample, add them here
-    missing_categories = np.array([np.setdiff1d(np.array([1,2,3,4,5]),D[0,:])])
+    missing_categories = np.array([np.setdiff1d(np.arange(1,opts['num_disease_categories']+1),D[0,:])])
     D = np.hstack((D,missing_categories))
     X = np.tile(origin,(opts['initial_samples']+len(missing_categories[0]),1))
 
     # initial GP estimate given measurements at origin
     P, M, S = gpor_2D_grid(X, D, opts['longitude_limit'], opts['latitude_limit'], opts['mapwidth'], opts['mapheight'])
 
-    for stops in range(1,11):    
+    for stops in [2]: #range(1,11):    
         opts['stops_per_group'] = stops
         score_reg, score_opt = compare_survey_types(routes,X,D,Preal,opts)
         logger.info('%.2f, %.2f, %d' % (score_reg, score_opt, stops))
-        
-if __name__=='__main__':
-    compare_multiple_surveys()
-    '''
+
+def plot_routes_and_stops(routes,survey_locations_by_group_reg,survey_locations_by_group_opt,opts):
+    ''' Show the routes with markers indicating survey sites. Compare regular and optimised survey
+    side by side.  '''
+
+    # plot the results - regular survey
+    path_colours = ['r','g','b']
+    path_linestyles = ['-','--','-.']
+    pylab.figure()
+    for g in range(opts['num_groups']):
+        pylab.plot(routes[g][:,1],routes[g][:,0],c=path_colours[g],ls=path_linestyles[g],linewidth=2)
+        for k in range(opts['stops_per_group']):
+            pylab.plot(survey_locations_by_group_reg[g][k][1],survey_locations_by_group_reg[g][k][0],
+                ls='None',marker='o',color=path_colours[g],markersize=10,markeredgewidth=2)
+    pylab.title('Regular')
+
+    # plot the results - optimised survey
+    pylab.figure()
+    for g in range(opts['num_groups']):
+        pylab.plot(routes[g][:,1],routes[g][:,0],c=path_colours[g],ls=path_linestyles[g],linewidth=2)
+        for k in range(opts['stops_per_group']):
+            pylab.plot(survey_locations_by_group_opt[g][k][1],survey_locations_by_group_opt[g][k][0],
+                ls='None',marker='o',color=path_colours[g],markersize=10,markeredgewidth=2)
+    pylab.title('Optimised')
+
+def compare_placement():
+    numpy.random.seed(8)
+    logging.basicConfig(filename='survey_simulation.log',level=logging.INFO)
+    logger = logging.getLogger(os.uname()[1])
+    
     origin = np.array([50,50])
     opts = {}
     opts['longitude_limit'] = (0.,99.)
     opts['latitude_limit'] = (0.,99.)
     opts['mapwidth'] = 100
     opts['mapheight'] = 100
-    opts['nsamples_per_stop'] = 4
+    opts['nsamples_per_stop'] = 5
     opts['num_groups'] = 3
     opts['total_survey_vertices'] = 30
-    opts['stops_per_group'] = 3
     opts['initial_samples'] = 5
-    opts['nsets_of_points'] = 2
+    opts['nsets_of_points'] = 1
+    opts['stops_per_group'] = 6
 
     # simulate a new survey
     Preal,tmp = simulate_disease([opts['mapheight'],opts['mapwidth']])
@@ -301,55 +352,29 @@ if __name__=='__main__':
 
     # sample data at the origin
     D = take_real_samples(Preal,origin,opts['initial_samples'])
+    
     # if any categories are missing from the sample, add them here
-    missing_categories = np.array([np.setdiff1d(np.array([1,2,3,4,5]),D[0,:])])
+    missing_categories = np.array([np.setdiff1d(np.arange(1,opts['num_disease_categories']+1),D[0,:])])
     D = np.hstack((D,missing_categories))
     X = np.tile(origin,(opts['initial_samples']+len(missing_categories[0]),1))
-    # add some noise to prevent numerical problems
-    X = X + numpy.random.rand(X.shape[0],X.shape[1])
 
     # initial GP estimate given measurements at origin
     P, M, S = gpor_2D_grid(X, D, opts['longitude_limit'], opts['latitude_limit'], opts['mapwidth'], opts['mapheight'])
 
-    path_colours = ['r','g','b']
-    path_linestyles = ['-','--','-.']
-    
-    # visualise selection of next point
-    Popt,Mopt,Sopt,Xopt,Dopt,survey_locations_by_group_opt = do_optimised_survey(copy.deepcopy(routes),P,M,S,X,D,opts)
+    # do the different types of surveys
+    Popt,Mopt,Sopt,Xopt,Dopt,survey_locations_by_group_opt = do_optimised_survey(copy.deepcopy(routes),Preal,P,M,S,X,D,opts)
+    Preg,Mreg,Sreg,Xreg,Dreg,survey_locations_by_group_reg = do_regular_survey(copy.deepcopy(routes),Preal,P,M,S,X,D,opts)
 
-    Preg,Mreg,Sreg,Xreg,Dreg,survey_locations_by_group_reg = do_regular_survey(copy.deepcopy(routes),P,M,S,X,D,opts)
+    plot_routes_and_stops(routes,survey_locations_by_group_reg,survey_locations_by_group_opt, opts)
 
-    pylab.matshow(Sreg) 
-    
-    for g in range(opts['num_groups']):
-        pylab.plot(routes[g][:,1],routes[g][:,0],c=path_colours[g],ls=path_linestyles[g],linewidth=2)
-        for k in range(opts['stops_per_group']):
-            pylab.plot(survey_locations_by_group_reg[g][k][1],survey_locations_by_group_reg[g][k][0],ls='None',marker='o',color=path_colours[g],markersize=10,markeredgewidth=2)            
+if __name__=='__main__':
 
-    score_reg = utility(Preg,Preal)
-    
-    pylab.title('Regular survey, cost %.4f' % (score_reg))    
-    pylab.gca().set_xlim((0,100))
-    pylab.gca().set_ylim((0,100))
-    pylab.gray()
-    
-    
-    pylab.matshow(Sopt) 
-    
-    for g in range(opts['num_groups']):
-        pylab.plot(routes[g][:,1],routes[g][:,0],c=path_colours[g],ls=path_linestyles[g],linewidth=2)
-        for k in range(opts['stops_per_group']):
-            pylab.plot(survey_locations_by_group_opt[g][k][1],survey_locations_by_group_opt[g][k][0],ls='None',marker='o',color=path_colours[g],markersize=10,markeredgewidth=2)            
+    # For one specific case, look at the positioning of survey sites
+    compare_placement()
 
-    score_opt = utility(Popt,Preal)  
-    
-    pylab.title('Optimised survey, cost %.4f' % (score_opt))
-    pylab.gca().set_xlim((0,100))
-    pylab.gca().set_ylim((0,100))
-    pylab.gray()    
- 
-    pylab.show()
-    '''
+    # Compare utility of a number of surveys
+    #compare_multiple_surveys()
+
     '''
     # visualise the selection of a number of points
     for g in range(opts['num_groups']):

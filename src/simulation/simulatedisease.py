@@ -1,4 +1,5 @@
 import numpy
+import numpy.random
 import scipy
 import scipy.signal
 import scipy.stats
@@ -30,7 +31,7 @@ def simulate_disease(field_size):
     if use_stored_matrices and os.path.isfile(pickle_filename):
         pkl_file = open('simulationobjects.pkl', 'rb')
         M = pickle.load(pkl_file)
-        S = pickle.load(pkl_file)
+        #S = pickle.load(pkl_file)
         D = pickle.load(pkl_file)
         pkl_file.close()
     else:
@@ -38,9 +39,21 @@ def simulate_disease(field_size):
         noise = numpy.random.rand(field_size[0], field_size[1])
         # filter out high frequency components to leave smooth function
         M = scipy.signal.convolve2d(noise, gauss_kern(filter_size), mode='valid')
+       
+        # Scale to range 0-1
+        M = M - M.min()
+        M = M / M.max()
+
+        D = numpy.zeros((M.shape[0],M.shape[1],2))
+        for y in range(M.shape[0]):
+            for x in range(M.shape[1]):
+                D[y,x,1] = M[y,x]
+                D[y,x,0] = 1-M[y,x]
+
+        '''
         # scale the matrix to the right range
         M = 4*(M-0.47)/(0.55-0.47) + 1
-        
+
         # sample the spread amongst disease levels
         noise = numpy.random.rand(field_size[0], field_size[1])
         S = scipy.signal.convolve2d(noise, gauss_kern(filter_size), mode='valid')
@@ -53,11 +66,12 @@ def simulate_disease(field_size):
                 for d in range(5):
                     D[y,x,d] = scipy.stats.norm.pdf(d+1,loc=M[y,x],scale=S[y,x])
                 D[y,x,:] = D[y,x,:]/sum(D[y,x,:])
+        pickle.dump(S,output)
+        '''
 
         # store the results for quick execution later 
         output = open(pickle_filename, 'wb')
         pickle.dump(M,output)
-        pickle.dump(S,output)
         pickle.dump(D,output)
         output.close()
 
@@ -110,11 +124,13 @@ def simulate_routes(field_size,num_groups,num_stops):
 
 if __name__=='__main__':
 
-    save_figures = True
+    numpy.random.seed(1)
+
+    save_figures = False
 
     field_size = [100, 100]
-    num_groups = 3
-    num_stops = 30
+    num_groups = 2
+    num_stops = 20
 
     D,M = simulate_disease(field_size)
     routes = simulate_routes(field_size, num_groups, num_stops)
@@ -137,6 +153,7 @@ if __name__=='__main__':
     # plot the sampled mean disease density
     pylab.matshow(M)
     pylab.colorbar()
+    pylab.hot()
     ax = pylab.gca()
     ax.set_xticks([])
     ax.set_yticks([])

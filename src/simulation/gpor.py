@@ -35,7 +35,7 @@ def read_gpor_array(filename):
     '''
     return None
 
-def gpor_2D_grid(X, D, x1_limit, x2_limit, grid_width, grid_height):
+def gpor_2D_grid(X, D, x1_limit, x2_limit, grid_width, grid_height, Xtest=[]):
     '''
     Given observations, calculate mean and variance of posterior GP with 2D inputs.
     Return evaluations for the cross-product of values in the list test_x1 and
@@ -59,42 +59,68 @@ def gpor_2D_grid(X, D, x1_limit, x2_limit, grid_width, grid_height):
 
     # Output formatted data file - test data
     testfile = randkey + 'cassava_gpor_test.0'
-    testmat = numpy.zeros([grid_height*grid_width,2])
-    for x in range(0,grid_width):
-        for y in range(0,grid_height):
-            lon = pixel_longitude[x]
-            lat = pixel_latitude[y]
-            testmat[x+grid_width*y][0] = lon
-            testmat[x+grid_width*y][1] = lat
+    if len(Xtest)==0:
+        testmat = numpy.zeros([grid_height*grid_width,2])
+        for x in range(0,grid_width):
+            for y in range(0,grid_height):
+                lon = pixel_longitude[x]
+                lat = pixel_latitude[y]
+                testmat[x+grid_width*y][0] = lon
+                testmat[x+grid_width*y][1] = lat
+    else:
+        testmat = Xtest
+
     write_gpor_array(testmat,testfile)
 
     # Call the GP ordinal regression    
     #p = subprocess.call([gpor_executable_location, '-G', 'cassava_gpor_train.0'])
 
     # this version suppresses the on-screen output from gpor
-    p = subprocess.call([gpor_executable_location, '-G', '-K', '0.01', randkey + 'cassava_gpor_train.0'], stdout=open("/dev/null", "w"))
+    p = subprocess.call([gpor_executable_location, '-G', '-K', '0.03', randkey + 'cassava_gpor_train.0'], stdout=open("/dev/null", "w"))
 
     # Read in the predictions from gpor
     reader_prob = csv.reader(open(randkey + "cassava_gpor_test.0.prob", "rb"), delimiter=' ')
     reader_conf = csv.reader(open(randkey + "cassava_gpor_test.0.conf", "rb"), delimiter=' ')
 
-    P = numpy.zeros([grid_height, grid_width, 5])
+    num_categories = 2
+    P = numpy.zeros([grid_height, grid_width, num_categories])
     M = numpy.zeros([grid_height, grid_width])
     S = numpy.zeros([grid_height, grid_width])
 
-    for x in range(0,grid_width):
-        for y in range(0,grid_height):
+    if len(Xtest)==0:
+        for x in range(0,grid_width):
+            for y in range(0,grid_height):
+                row = reader_prob.next()
+    
+                # distribution over categories
+                # there may not be all ordinal categories
+                prob = numpy.array([float(val) for val in row[0:-1]])
+                if len(prob)<num_categories:
+                    prob = numpy.append(prob,numpy.zeros(num_categories-len(prob)))
+                # mode
+                pred = prob.argmax() + 1
+                # mean
+                mean = numpy.dot(prob,numpy.arange(1,num_categories+1))
+    
+                row_conf = reader_conf.next()
+                conf = float(row_conf[0])
+    
+                M[y,x] = mean
+                S[y,x] = conf
+                P[y,x,:] = prob
+    else:
+        for i in range(Xtest.shape[0]):
             row = reader_prob.next()
+            y = Xtest[i,0]
+            x = Xtest[i,1]
 
-            # distribution over categories
-            # there may be less than 5 ordinal categories
             prob = numpy.array([float(val) for val in row[0:-1]])
-            if len(prob)<5:
-                prob = numpy.append(prob,numpy.zeros(5-len(prob)))
+            if len(prob)<num_categories:
+                prob = numpy.append(prob,numpy.zeros(num_categories-len(prob)))
             # mode
             pred = prob.argmax() + 1
             # mean
-            mean = numpy.dot(prob,numpy.array([1,2,3,4,5]).transpose())
+            mean = numpy.dot(prob,numpy.arange(1,num_categories+1))
 
             row_conf = reader_conf.next()
             conf = float(row_conf[0])
@@ -102,12 +128,13 @@ def gpor_2D_grid(X, D, x1_limit, x2_limit, grid_width, grid_height):
             M[y,x] = mean
             S[y,x] = conf
             P[y,x,:] = prob
-           
+
     # tidy up the filespace
     for tempfile in glob.glob(randkey+'*'):
         os.remove(tempfile)
 
     return P, M, S
+
 
 if __name__=='__main__':
     ''' Show an example ordinal regression, plotting the mean predicted value on a grid. '''
