@@ -35,6 +35,8 @@ def read_gpor_array(filename):
     '''
     return None
 
+
+
 def gpor_2D_grid(X, D, x1_limit, x2_limit, grid_width, grid_height, Xtest=[]):
     '''
     Given observations, calculate mean and variance of posterior GP with 2D inputs.
@@ -76,7 +78,7 @@ def gpor_2D_grid(X, D, x1_limit, x2_limit, grid_width, grid_height, Xtest=[]):
     #p = subprocess.call([gpor_executable_location, '-G', 'cassava_gpor_train.0'])
 
     # this version suppresses the on-screen output from gpor
-    p = subprocess.call([gpor_executable_location, '-G', '-K', '0.03', randkey + 'cassava_gpor_train.0'], stdout=open("/dev/null", "w"))
+    p = subprocess.call([gpor_executable_location, '-G', '-K', '0.03', '-S', '10', randkey + 'cassava_gpor_train.0'], stdout=open("/dev/null", "w"))
 
     # Read in the predictions from gpor
     reader_prob = csv.reader(open(randkey + "cassava_gpor_test.0.prob", "rb"), delimiter=' ')

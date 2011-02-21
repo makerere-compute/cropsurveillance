@@ -6,21 +6,30 @@ import os.path
 import copy
 import logging
 
+def euc_dist(a,b):
+    ''' Euclidean distance between two vectors. '''
+    delta = a-b
+    dist = np.sqrt(np.dot(delta,delta))
+    return dist
+
 def kl_div(a,b):
     ''' KL divergence between two vectors '''
     return sum(np.multiply(a,np.log(a/b)))
 
-def utility(P,Preal):
+def loss(P,Preal,weighted=True):
     '''
-    Calculate the utility of GP estimate given by mean M and variance S, compared
+    Calculate the loss of GP estimate given by mean M and variance S, compared
     with actual underlying disease distribution given by X.
     initially take e.g. earth mover's distance between GP mean and reality.
     '''
     dist = 0
+    tiny = 1e-4
     for y in range(P.shape[0]):
         for x in range(P.shape[1]):
-            dist += kl_div(Preal[y,x,:],P[y,x,:])
-            
+            dist += euc_dist(Preal[y,x,:],P[y,x,:])
+            if weighted:
+                dist *= Preal[y,x,1]
+            #dist += kl_div(Preal[y,x,:]+tiny,P[y,x,:]+tiny)
     return dist
 
 def take_real_samples(Preal,x,n):
@@ -43,13 +52,6 @@ def take_model_samples(P, M,S,x,n):
     samples = samples + 1 # multinomial fn is 0-indexed
     return np.array([samples])
 
-
-def euc_dist(a,b):
-    ''' Euclidean distance between two vectors. '''
-    delta = a-b
-    dist = np.sqrt(np.dot(delta,delta))
-    return dist
-
 def all_points_on_routes(routes):
     ''' Return an Nx2 vector with all the points on any route '''
     X = numpy.array(numpy.round(routes[0][0,:]))
@@ -68,7 +70,7 @@ def all_points_on_routes(routes):
     return X
 
 
-def most_informative_stop(route,P, M,S,opts):
+def most_informative_stop(route,P, M,S,opts,weighted):
     ''' What is the point along the route (adjacent line segments) which is most informative
     or utility-maximising to stop at. Could take the highest variance along the path. Does this
     properly account for uncertainty at all points on the map?
@@ -78,10 +80,11 @@ def most_informative_stop(route,P, M,S,opts):
     This is one way to do it if the field is not uniform. Need a better way
     to choose an arbitrary location if all places are equal though.
     '''
-    best_point_so_far = None
-    best_score_so_far = 0
+    best_point_so_far = []
+    best_score_so_far = [-1e10]
+    dist_of_best_point_so_far = []
+    tolerance = 1e-5
     value = 0
-    dist_of_best_point_so_far = 0
     dist_to_current_segment = 0
     for i in range(len(route)-1):
         # divide this segment into points to sample
@@ -92,15 +95,32 @@ def most_informative_stop(route,P, M,S,opts):
         for p in range(npoints):
             current_point = route[i,:] + p*delta
             v = S[int(current_point[0]),int(current_point[1])]
-            if v > best_score_so_far:
-                best_score_so_far = v
-                best_point_so_far = current_point
-                dist_of_best_point_so_far = dist_to_current_segment + p
+            if weighted:
+                v = v * (P[int(current_point[0]),int(current_point[1]),1] + 0.1)**1
+            if v > best_score_so_far[0]-tolerance:
+                # if indistinguishable from the other points
+                if best_score_so_far[0]-v>tolerance:
+                    best_score_so_far.append(v)
+                    best_point_so_far.append(current_point)
+                    dist_of_best_point_so_far.append(dist_to_current_segment + p)
+                # otherwise a new best point
+                else:
+                    best_score_so_far = [v]
+                    best_point_so_far = [current_point]
+                    dist_of_best_point_so_far = [dist_to_current_segment + p]
+
+
         dist_to_current_segment += segment_distance
         
-    return best_point_so_far, dist_of_best_point_so_far
+    # random tie breaker if many best points
+    if len(best_score_so_far)>1:
+        i =int(numpy.floor(numpy.random.rand()*len(best_score_so_far)))
+    else:
+        i = 0
 
-def sample_set_of_stop_points(route,P,M,S,k,X,D,opts):
+    return best_point_so_far[i], dist_of_best_point_so_far[i]
+
+def sample_set_of_stop_points(route,P,M,S,k,X,D,opts,weighted):
     ''' Find a set of k points along route, which are maximally informative
     according to sampled data. 
     Return: array of distances from origin
@@ -113,7 +133,7 @@ def sample_set_of_stop_points(route,P,M,S,k,X,D,opts):
         #pylab.matshow(S)
         
         # find the next place to stop according to current estimate
-        x, stop_distance = most_informative_stop(route,P,M,S,opts)
+        x, stop_distance = most_informative_stop(route,P,M,S,opts,weighted)
         stop_distances.append(stop_distance)
         stop_positions.append(x)
 
@@ -127,7 +147,7 @@ def sample_set_of_stop_points(route,P,M,S,k,X,D,opts):
 
     return np.array(stop_distances), np.array(stop_positions)
 
-def find_next_stop_point(route,P,M,S,k,X,D,opts):
+def find_next_stop_point(route,P,M,S,k,X,D,opts,weighted):
     ''' 
     Find the next point by sampling a number of sets of points, then taking the mean
     of the closest point.
@@ -143,7 +163,7 @@ def find_next_stop_point(route,P,M,S,k,X,D,opts):
     nsets_of_points = opts['nsets_of_points']
     stop_point_samples = []
     for i in range(nsets_of_points):
-        new_sample_distances, new_sample_positions = sample_set_of_stop_points(route,P,M,S,k,X,D,opts)
+        new_sample_distances, new_sample_positions = sample_set_of_stop_points(route,P,M,S,k,X,D,opts,weighted)
         stop_point_samples.append(min(new_sample_distances))
 
     next_point_dist = np.mean(np.array(stop_point_samples))
@@ -170,18 +190,25 @@ def find_next_stop_point(route,P,M,S,k,X,D,opts):
 
     return current_point, remaining_route
     
-def do_optimised_survey(routes,Preal,P,M,S,X,D,opts):
-    survey_locations_by_group = {}  
-    for g in range(opts['num_groups']):
-        survey_locations_by_group[g] = []
-        
-    for k in range(opts['stops_per_group'],0,-1):
+def do_optimised_survey(routes,Preal,P,M,S,X,D,opts,weighted=True):
+    # if specified, carry out a first tour, stopping at regular intervals
+    if opts['stops_on_first_tour']>0:
+        opts2 = copy.copy(opts)
+        opts2['stops_per_group'] = opts2['stops_on_first_tour']
+        P,M,S,X,D,survey_locations_by_group = do_regular_survey(copy.deepcopy(routes),Preal,P,M,S,X,D,opts2)
+    else: 
+        for g in range(opts['num_groups']):
+            survey_locations_by_group = {}
+            survey_locations_by_group[g] = []
+
+    # carry out the optimised tour, adapting the next location at each step
+    for k in range(opts['stops_per_group'] - opts['stops_on_first_tour'],0,-1):
         print('%d stops to go' % (k))
         for g in range(opts['num_groups']):
             print('group %d. %d observations' % (g,X.shape[0]))
             
             # calculate the next point on this route
-            next_point, remaining_route = find_next_stop_point(routes[g],P,M,S,k,X,D,opts)
+            next_point, remaining_route = find_next_stop_point(routes[g],P,M,S,k,X,D,opts,weighted)
             routes[g] = remaining_route
             survey_locations_by_group[g].append(next_point)
             
