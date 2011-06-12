@@ -2,4 +2,5 @@
 <resources>
     <string name="hello">Hello World, IdentifyDisease!</string>
     <string name="app_name">Crop Disease</string>
+    <string name="aidev">AI-DEV MAKERERE UNIVERSITY</string>
 </resources>

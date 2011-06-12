@@ -8,12 +8,16 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Paint;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -23,14 +27,11 @@ import android.widget.FrameLayout;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.ArrayList;
 import java.nio.FloatBuffer;
 
 import static com.googlecode.javacv.cpp.opencv_core.*;
 import static com.googlecode.javacv.cpp.opencv_features2d.*;
 import static com.googlecode.javacv.cpp.opencv_objdetect.*;
-import static com.googlecode.javacv.cpp.opencv_imgproc.*;
-import static com.googlecode.javacv.cpp.opencv_highgui.*;
 
 public class IdentifyDisease extends Activity {
     private FrameLayout layout;
@@ -60,6 +61,27 @@ public class IdentifyDisease extends Activity {
             new AlertDialog.Builder(this).setMessage(e.getMessage()).create().show();
         }
     }
+    @Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+
+		// Inflate our menu which can gather user input for switching camera
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.identifymenu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle all of the possible menu actions.
+		switch (item.getItemId()) {
+		case R.id.whiteflycount:
+			startActivity(new Intent("WhiteFlyCount"));
+			break;
+		
+		}
+		return super.onOptionsItemSelected(item);
+
+	}
 }	
 
  
@@ -301,6 +323,7 @@ class FaceView extends View implements Camera.PreviewCallback {
 	        float textWidth = paint.measureText(s);
 	        canvas.drawText(s, (getWidth()-textWidth)/2, 40, paint);
         }
+        
     }
 }
 
