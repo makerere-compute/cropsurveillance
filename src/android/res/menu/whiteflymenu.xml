@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--  This is our one standard application action (creating a new note). -->
+    <item android:title="Cassava Mosaic Detection" android:id="@+id/cassavamosaic"></item>
+   
+</menu>
