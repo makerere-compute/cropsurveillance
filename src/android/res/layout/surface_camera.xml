@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:orientation="vertical">
+	<SurfaceView android:id="@+id/camera_surface"
+		android:layout_width="fill_parent" android:layout_weight="1"
+		android:layout_height="fill_parent">
+	</SurfaceView>
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		android:layout_width="fill_parent" android:layout_height="48px" android:orientation="horizontal">
+		<Button android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:id="@+id/button_camera_capture" android:text="Snap"></Button>
+		<ScrollView android:layout_width="fill_parent" android:layout_height="48px" >
+		<RadioGroup android:layout_width="fill_parent"
+				android:layout_height="wrap_content" android:orientation="vertical"
+				android:id="@+id/RadioImageC">
+				<RadioButton android:checked="true" android:id="@+id/radio_low"
+					android:text="Low" />
+					<RadioButton android:checked="false" android:id="@+id/radio_normal"
+					android:text="Normal" />
+				<RadioButton android:checked="false" android:id="@+id/radio_high"
+					android:text="High Detail" />
+					<RadioButton android:checked="false" android:id="@+id/radio_super"
+					android:text="Super High Detail" />
+			</RadioGroup>
+		</ScrollView>
+	</LinearLayout>
+</LinearLayout>

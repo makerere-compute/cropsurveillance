@@ -13,6 +13,12 @@
     </LinearLayout>
     
     </LinearLayout>
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent">
+    <LinearLayout android:id="@+id/linearLayout17" 
+    android:layout_height="wrap_content" 
+    android:layout_width="match_parent" android:orientation="vertical">
+    
+    
      <LinearLayout android:id="@+id/linearLayout1" 
     android:layout_height="wrap_content" 
     android:layout_width="match_parent" android:orientation="horizontal">
@@ -23,7 +29,17 @@
      <LinearLayout android:id="@+id/linearLayout1" 
     android:layout_height="wrap_content" 
     android:layout_width="match_parent" android:orientation="horizontal">
-    <Button android:id="@+id/WhiteFlyCount" android:text="White Fly Count" android:layout_height="wrap_content" android:layout_width="match_parent"></Button>
+    <Button android:id="@+id/SnapWhiteFlyCount" android:text="Snap and White Fly Count" android:layout_height="wrap_content" android:layout_width="match_parent"></Button>
     
     </LinearLayout>
+     <LinearLayout android:id="@+id/linearLayout1" 
+    android:layout_height="wrap_content" 
+    android:layout_width="match_parent" android:orientation="horizontal">
+    <Button android:id="@+id/WhiteFlyCount" android:text="Auto White Fly Count" android:layout_height="wrap_content" android:layout_width="match_parent"></Button>
+    
+    </LinearLayout>
+    
+    </LinearLayout>
+    </ScrollView>
+    
       </LinearLayout>
