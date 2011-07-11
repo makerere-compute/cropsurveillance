@@ -152,7 +152,7 @@ public class WhiteFlyDetect extends Activity {
 	            }
 	        }
 
-	        whiteflies = cvHaarDetectObjects(grayImage, classifier, storage, 3, 1, CV_HAAR_DO_CANNY_PRUNING);
+	        whiteflies = cvHaarDetectObjects(grayImage, classifier, storage,1.1, 1, CV_HAAR_DO_CANNY_PRUNING);
 	        postInvalidate();
 	        cvClearMemStorage(storage);
 	    }
