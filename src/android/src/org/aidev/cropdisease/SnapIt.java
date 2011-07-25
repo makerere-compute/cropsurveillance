@@ -1,10 +1,15 @@
 package org.aidev.cropdisease;
 
+import static com.googlecode.javacv.cpp.opencv_core.IPL_DEPTH_8U;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+
+import com.googlecode.javacv.cpp.opencv_core.IplImage;
 
 import android.app.Activity;
 import android.content.Context;
@@ -135,7 +140,9 @@ public class SnapIt extends Activity implements SurfaceHolder.Callback,
 		// Handle all of the possible menu actions.
 		switch (item.getItemId()) {
 		case R.id.menu_camera_close:
-			setResult(1);
+			getIntent().putExtra("ODK Collect", 893);
+			setResult(7, getIntent());
+			
 			finish();
 			break;
 		
@@ -165,6 +172,20 @@ public class SnapIt extends Activity implements SurfaceHolder.Callback,
 				 * Perform Whitefly Detection
 				 * 
 				 * ***/
+				int width = c.getParameters().getPictureSize().width;
+				int height = c.getParameters().getPictureSize().height;
+				
+				IplImage cvImage;
+				cvImage = IplImage.create(width, height, IPL_DEPTH_8U, 3);
+				
+		        ByteBuffer imageBuffer = cvImage.getByteBuffer();
+		        for (int y = 0; y < height; y++) {
+		            int dataLine = y*width;
+		            int imageLine = y;
+		            for (int x = 0; x < width; x++) {
+		                imageBuffer.put(imageLine + x, imageData[dataLine + x]);
+		            }
+		        }
 
 			}
 		}

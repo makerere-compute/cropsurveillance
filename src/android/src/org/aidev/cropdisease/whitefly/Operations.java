@@ -2,11 +2,15 @@ package org.aidev.cropdisease.whitefly;
 
 import static com.googlecode.javacv.cpp.opencv_core.IPL_DEPTH_8U;
 
+import java.util.ArrayList;
+
 import com.googlecode.javacv.cpp.opencv_core.CvArr;
 import com.googlecode.javacv.cpp.opencv_core.CvContour;
 import com.googlecode.javacv.cpp.opencv_core.CvMat;
+import com.googlecode.javacv.cpp.opencv_core.CvScalar;
 import com.googlecode.javacv.cpp.opencv_core.CvMemStorage;
 import com.googlecode.javacv.cpp.opencv_core.IplImage;
+import com.googlecode.javacv.cpp.opencv_imgproc.CvHistogram;
 import com.googlecode.javacv.*;
 import static com.googlecode.javacv.cpp.opencv_imgproc.CV_THRESH_BINARY;
 import static com.googlecode.javacv.cpp.opencv_imgproc.cvBoundingRect;
@@ -66,7 +70,7 @@ public class Operations {
 	}
 	
 	
-  public int[] findmatches(IplImage image,CvArr imbackproject_fly,CvArr imbackproject_leaf,CvArr imbackproject_leafarea) {
+  public ArrayList findmatches(IplImage image,CvArr imbackproject_fly,CvArr imbackproject_leaf,CvArr imbackproject_leafarea) {
 	// Find the postions of whitefly in an image
 	   int imagewidth = image.width();
 	    
@@ -74,7 +78,7 @@ public class Operations {
 	    int FLY_THRESHOLD = 20,
 	    LEAF_THRESHOLD = 30;
 	    
-	    int[]matches = null;
+	    ArrayList matches = null;
 
 	   //Get the contours from the binary image
 	    int width = image.width();
@@ -113,6 +117,9 @@ public class Operations {
                         
                         int[] range_x = null ;//=xleft,xleft+width);
                         int[] range_y = null ;//= (ytop,ytop+height)
+                        
+                        // convert to use cv.Avg()
+                        
                         float  fly = averagefield((IplImage) imbackproject_fly,range_x,range_y);
                         float leaf = averagefield((IplImage) imbackproject_leaf,range_x,range_y);
                         float leafarea = averagefield((IplImage) imbackproject_leafarea,range_x,range_y);
@@ -120,7 +127,8 @@ public class Operations {
                         // test that the contour contains a fly and the surrounding is leaf
                         if(fly>FLY_THRESHOLD){ 
                         if ((leafarea-leaf)>LEAF_THRESHOLD){
-                            //matches[counter++]=((xleft+width/2,ytop+height/2, width, height));
+                        	int matchlocation[] = {xleft+width/2,ytop+height/2, width, height};
+                            matches.add(matchlocation);
                         	
                         } 
                         }
@@ -136,23 +144,60 @@ public class Operations {
 	  
 }
   
-  int[] detect(IplImage im,CvHistogram []histograms){
+  ArrayList detect(IplImage im,CvHistogram []histograms){
+      double leaf_hist_h_array[] = {0.000, 0.000, 0.000, 0.000, 0.003, 0.017, 0.051, 0.044, 0.258, 0.533, 0.075, 0.017, 0.002, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000};
+      double leaf_hist_s_array[] = {0.000, 0.000, 0.003, 0.006, 0.008, 0.021, 0.029, 0.040, 0.076, 0.125, 0.165, 0.165, 0.130, 0.079, 0.051, 0.032, 0.019, 0.012, 0.009, 0.006, 0.005, 0.004, 0.003, 0.002, 0.002, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.000};
+      double leaf_hist_v_array[] = {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.002, 0.004, 0.004, 0.006, 0.008, 0.024, 0.062, 0.062, 0.094, 0.111, 0.113, 0.101, 0.074, 0.072, 0.088, 0.080, 0.048, 0.019, 0.010, 0.007, 0.007, 0.004, 0.002, 0.000};
+      double fly_hist_h_array[] = {0.000, 0.000, 0.000, 0.000, 0.012, 0.140, 0.195, 0.087, 0.079, 0.069, 0.029, 0.068, 0.093, 0.071, 0.073, 0.044, 0.036, 0.003, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000};
+      double fly_hist_s_array[] = {0.057, 0.211, 0.250, 0.143, 0.126, 0.072, 0.046, 0.019, 0.015, 0.018, 0.010, 0.007, 0.010, 0.003, 0.007, 0.004, 0.001, 0.001, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000};
+      double fly_hist_v_array[] = {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.001, 0.001, 0.001, 0.001, 0.001, 0.000, 0.002, 0.003, 0.001, 0.006, 0.009, 0.018, 0.023, 0.029, 0.040, 0.043, 0.093, 0.125, 0.212, 0.394};    
+ 
+      int h_bins[] = {32};
+      int s_bins[] = {32};
+      int v_bins[] = {32};
+      float h_ranges[][] = {{0, 180}};
+      float s_ranges[][] = {{0, 255}};
+      float v_ranges[][] = {{0, 255}};
+      
+      CvHistogram leaf_hist_h = cvCreateHist(1, h_bins, CV_HIST_ARRAY, h_ranges, 1);
+      CvHistogram leaf_hist_s = cvCreateHist(1, s_bins, CV_HIST_ARRAY, s_ranges, 1);
+      CvHistogram leaf_hist_v = cvCreateHist(1, v_bins, CV_HIST_ARRAY, v_ranges, 1);
+      CvHistogram fly_hist_h = cvCreateHist(1, h_bins, CV_HIST_ARRAY, h_ranges, 1);
+      CvHistogram fly_hist_s = cvCreateHist(1, s_bins, CV_HIST_ARRAY, s_ranges, 1);
+      CvHistogram fly_hist_v = cvCreateHist(1, v_bins, CV_HIST_ARRAY, v_ranges, 1) ;
+      
+      for (int i=0; i<h_bins.length;i++) {
+    	  //leaf_hist_h.bin
+    	  cvSet1D(leaf_hist_h.bins(), i, cvScalar(leaf_hist_h_array[i],0.0,0.0,0.0));
+    	  cvSet1D(leaf_hist_s.bins(), i, cvScalar(leaf_hist_s_array[i],0.0,0.0,0.0));
+    	  cvSet1D(leaf_hist_v.bins(), i, cvScalar(leaf_hist_v_array[i],0.0,0.0,0.0));
+    	  cvSet1D(fly_hist_h.bins(), i, cvScalar(fly_hist_h_array[i],0.0,0.0,0.0));
+    	  cvSet1D(fly_hist_s.bins(), i, cvScalar(fly_hist_s_array[i],0.0,0.0,0.0));
+    	  cvSet1D(fly_hist_v.bins(), i, cvScalar(fly_hist_v_array[i],0.0,0.0,0.0));
+
+    	  /*
+          leaf_hist_h.bins() = leaf_hist_h_array[i];
+          leaf_hist_s.bins()[i] = leaf_hist_s_array[i];
+          leaf_hist_v.bins()[i] = leaf_hist_v_array[i];
+          fly_hist_h.bins()[i] = fly_hist_h_array[i]; 
+          fly_hist_s.bins[i] = fly_hist_s_array[i]; 
+          fly_hist_v.bins[i] = fly_hist_v_array[i]; */
+      }
+                                                
+      /*
 	  CvHistogram leaf_hist_h = histograms[0];
 	  CvHistogram leaf_hist_s = histograms[1];
 	  CvHistogram leaf_hist_v = histograms[2];
 	  CvHistogram fly_hist_h = histograms[3];
 	  CvHistogram fly_hist_s = histograms[4];
-	  CvHistogram fly_hist_v = histograms[5];
+	  CvHistogram fly_hist_v = histograms[5];*/
 	    
 	   // # Load the test image, and split into H, S and V images
 	  CvArr imbackproject_fly = backprojectimage(im,fly_hist_h, fly_hist_s, fly_hist_v);
 	  CvArr   imbackproject_leaf = backprojectimage(im,leaf_hist_h, leaf_hist_s, leaf_hist_v);
 		
 
-	   // # Example of convolution with a custom template
-	      
-	   
-	    
+	   // # Example of convolution with a custom template   
 	    IplImage imsmoothed = cvCreateImage(cvGetSize(im),IPL_DEPTH_8U,3);
 	    int filtersize = 2*(im.width()/120) + 1;
 	    
@@ -167,10 +212,9 @@ public class Operations {
 	  
 	    
 	    //# Find the matching points and highlight them
-	    int[] matchingcoords = findmatches(imthreshold,imbackproject_fly,imbackproject_leaf,imbackproject_leafarea);
+	    ArrayList matchingcoords = findmatches(imthreshold,imbackproject_fly,imbackproject_leaf,imbackproject_leafarea);
 	    return matchingcoords;
 	   
 
   }
 }
-
