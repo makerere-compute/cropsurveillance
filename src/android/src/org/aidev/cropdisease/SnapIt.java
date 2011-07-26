@@ -9,6 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.aidev.cropdisease.whitefly.Operations;
+
 import com.googlecode.javacv.cpp.opencv_core.IplImage;
 
 import android.app.Activity;
@@ -172,20 +174,11 @@ public class SnapIt extends Activity implements SurfaceHolder.Callback,
 				 * Perform Whitefly Detection
 				 * 
 				 * ***/
-				int width = c.getParameters().getPictureSize().width;
-				int height = c.getParameters().getPictureSize().height;
-				
-				IplImage cvImage;
-				cvImage = IplImage.create(width, height, IPL_DEPTH_8U, 3);
-				
-		        ByteBuffer imageBuffer = cvImage.getByteBuffer();
-		        for (int y = 0; y < height; y++) {
-		            int dataLine = y*width;
-		            int imageLine = y;
-		            for (int x = 0; x < width; x++) {
-		                imageBuffer.put(imageLine + x, imageData[dataLine + x]);
-		            }
-		        }
+		   int val=	new Operations().processImage();	
+			getIntent().putExtra("ODK Collect", val);
+			setResult(7, getIntent());
+			
+			finish();
 
 			}
 		}
@@ -282,7 +275,7 @@ protected void onDestroy() {
 	public  boolean StoreByteImage(Context mContext, byte[] imageData,
 			int quality, String expName) {
 
-		File sdImageMainDirectory = new File("/sdcard/snapit");
+		File sdImageMainDirectory = new File("/sdcard/odk");
 
 		FileOutputStream fileOutputStream = null;
 		Uri fileuri=null;
@@ -309,13 +302,13 @@ protected void onDestroy() {
 			Bitmap myImage = BitmapFactory.decodeByteArray(imageData, 0,
 					imageData.length, options);
 
-			Long now = Long.valueOf(java.lang.System.currentTimeMillis());
+			
 			
 			//if the action didnt provide extras then save the images to snapit gallery
 			if(fileuri==null)
 			{
 				fileOutputStream = new FileOutputStream(
-						sdImageMainDirectory.toString() + "/" + now + ".jpg");
+						sdImageMainDirectory.toString() + "/rawimage.jpg");
 				
 				
 			}else//save the picture to the intents extra path

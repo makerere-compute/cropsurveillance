@@ -1,19 +1,46 @@
 package org.aidev.cropdisease.whitefly;
 
 import static com.googlecode.javacv.cpp.opencv_core.IPL_DEPTH_8U;
+import static com.googlecode.javacv.cpp.opencv_core.cvCircle;
+import static com.googlecode.javacv.cpp.opencv_core.cvClearMemStorage;
+import static com.googlecode.javacv.cpp.opencv_core.cvGetSeqElem;
+import static com.googlecode.javacv.cpp.opencv_core.cvReleaseImage;
+import static com.googlecode.javacv.cpp.opencv_core.cvScalar;
 
+import java.io.File;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
+
+
+import android.graphics.Color;
+import android.net.Uri;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.googlecode.javacv.cpp.opencv_core.CvArr;
 import com.googlecode.javacv.cpp.opencv_core.CvContour;
 import com.googlecode.javacv.cpp.opencv_core.CvMat;
+import com.googlecode.javacv.cpp.opencv_core.CvPoint;
 import com.googlecode.javacv.cpp.opencv_core.CvScalar;
 import com.googlecode.javacv.cpp.opencv_core.CvMemStorage;
+import com.googlecode.javacv.cpp.opencv_core.CvSeq;
 import com.googlecode.javacv.cpp.opencv_core.IplImage;
+import com.googlecode.javacv.cpp.opencv_features2d.CvSURFParams;
+import com.googlecode.javacv.cpp.opencv_features2d.CvSURFPoint;
 import com.googlecode.javacv.cpp.opencv_imgproc.CvHistogram;
+import com.googlecode.javacv.cpp.opencv_objdetect.CvHaarFeature;
 import com.googlecode.javacv.*;
+
+import static com.googlecode.javacv.cpp.opencv_features2d.cvExtractSURF;
+import static com.googlecode.javacv.cpp.opencv_features2d.cvSURFParams;
+import static com.googlecode.javacv.cpp.opencv_highgui.cvLoadImage;
+import static com.googlecode.javacv.cpp.opencv_highgui.cvSaveImage;
+import static com.googlecode.javacv.cpp.opencv_imgproc.CV_BGR2GRAY;
 import static com.googlecode.javacv.cpp.opencv_imgproc.CV_THRESH_BINARY;
 import static com.googlecode.javacv.cpp.opencv_imgproc.cvBoundingRect;
+import static com.googlecode.javacv.cpp.opencv_imgproc.cvCvtColor;
+import static com.googlecode.javacv.cpp.opencv_imgproc.cvResize;
+
 import com.googlecode.javacpp.Loader;
 import com.googlecode.javacv.*;
 import com.googlecode.javacv.cpp.*;
@@ -25,7 +52,7 @@ public class Operations {
 	private static final double MAX_ASPECT_RATIO = 0;
 	private CvMemStorage storage;
 	
-	public float averagefield(IplImage image,int[] range_x,int[] range_y)
+	private float averagefield(IplImage image,int[] range_x,int[] range_y)
 	{
 		// Average pixel value in a rectangular region of an image 
 	    int total = 0;
@@ -40,7 +67,7 @@ public class Operations {
 
 	
 
-	 public CvArr backprojectimage(IplImage im,CvHistogram hist_h, CvHistogram hist_s, CvHistogram  hist_v){
+	 private CvArr backprojectimage(IplImage im,CvHistogram hist_h, CvHistogram hist_s, CvHistogram  hist_v){
 	     // ''' Histogram back-projection '''
 		 IplImage imhsv  = cvCreateImage(cvGetSize(im),8,3);
 	      cvCvtColor(im, imhsv, CV_BGR2HSV);
@@ -70,11 +97,11 @@ public class Operations {
 	}
 	
 	
-  public ArrayList findmatches(IplImage image,CvArr imbackproject_fly,CvArr imbackproject_leaf,CvArr imbackproject_leafarea) {
-	// Find the postions of whitefly in an image
+  private ArrayList findmatches(IplImage image,CvArr imbackproject_fly,CvArr imbackproject_leaf,CvArr imbackproject_leafarea) {
+	// Find the postions of  in an image
 	   int imagewidth = image.width();
 	    
-	    double MAX_PROPORTIONAL_WHITEFLY_SIZE = 0.03;
+	    double MAX_PROPORTIONAL__SIZE = 0.03;
 	    int FLY_THRESHOLD = 20,
 	    LEAF_THRESHOLD = 30;
 	    
@@ -110,7 +137,7 @@ public class Operations {
                int w=rect.width();
                int h=rect.height();           
                
-                if(w<imagewidth*MAX_PROPORTIONAL_WHITEFLY_SIZE){ 
+                if(w<imagewidth*MAX_PROPORTIONAL__SIZE){ 
                     
                    // test that the ratio of major and minor axes is within range
                     if((1.0*w)/h<MAX_ASPECT_RATIO && (1.0*height)/width<MAX_ASPECT_RATIO){                
@@ -144,7 +171,7 @@ public class Operations {
 	  
 }
   
-  ArrayList detect(IplImage im,CvHistogram []histograms){
+private  ArrayList detect(IplImage im){
       double leaf_hist_h_array[] = {0.000, 0.000, 0.000, 0.000, 0.003, 0.017, 0.051, 0.044, 0.258, 0.533, 0.075, 0.017, 0.002, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000};
       double leaf_hist_s_array[] = {0.000, 0.000, 0.003, 0.006, 0.008, 0.021, 0.029, 0.040, 0.076, 0.125, 0.165, 0.165, 0.130, 0.079, 0.051, 0.032, 0.019, 0.012, 0.009, 0.006, 0.005, 0.004, 0.003, 0.002, 0.002, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.000};
       double leaf_hist_v_array[] = {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.002, 0.004, 0.004, 0.006, 0.008, 0.024, 0.062, 0.062, 0.094, 0.111, 0.113, 0.101, 0.074, 0.072, 0.088, 0.080, 0.048, 0.019, 0.010, 0.007, 0.007, 0.004, 0.002, 0.000};
@@ -213,8 +240,63 @@ public class Operations {
 	    
 	    //# Find the matching points and highlight them
 	    ArrayList matchingcoords = findmatches(imthreshold,imbackproject_fly,imbackproject_leaf,imbackproject_leafarea);
-	    return matchingcoords;
-	   
+	    return matchingcoords;   
 
   }
+  
+
+	public int processImage() {
+		try {
+			
+			long start = System.currentTimeMillis();
+
+			// do machine vision
+			storage = CvMemStorage.create();
+		
+			
+			// Load the original image.
+			IplImage originalImage = cvLoadImage(new File(
+					"/sdcard/odk/rawimage.jpg").getAbsolutePath());
+			new File(new File("/sdcard/odk/rawimage.jpg").getAbsolutePath())
+					.delete();
+
+
+			IplImage ImageResized = IplImage.create(640, 480, IPL_DEPTH_8U,
+					1);
+			cvResize(originalImage, ImageResized);
+		
+			detect(ImageResized);
+			
+			
+
+			cvSaveImage(
+					new File("/sdcard/odk/whitefly.jpg").getAbsolutePath(),
+					ImageResized);
+
+			// matches.add(new Integer(1));
+
+			cvClearMemStorage(storage);
+
+			long end = System.currentTimeMillis();
+			long elapse = end - start;
+			// save
+
+			cvReleaseImage(originalImage);
+			cvReleaseImage(ImageResized);
+			// read and display
+			
+
+			//img.setImageURI(Uri.parse(new File("/sdcard/mcrop/parasite.jpg")
+			//		.getAbsolutePath()));
+
+			new File(new File("/sdcard/odk/whitefly.jpg").getAbsolutePath())
+					.delete();
+			
+			
+		} catch (Exception e) {
+			
+		}
+		
+		return 8795;
+	}
 }
