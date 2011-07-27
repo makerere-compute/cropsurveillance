@@ -1,31 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="org.aidev.cropdisease"
+      package="org.aidev.mcrop"
       android:versionCode="1"
       android:versionName="1.0">
-    <uses-sdk android:minSdkVersion="8" />
-	<uses-permission android:name="android.permission.CAMERA" />
+      
+     <uses-permission android:name="android.permission.CAMERA" />
      <uses-feature android:name="android.hardware.camera" />
+<uses-permission android:name="android.permission.WRITE_OWNER_DATA"></uses-permission>
+<uses-permission android:name="android.permission.READ_OWNER_DATA"></uses-permission>
+
+
     <application android:icon="@drawable/icon" android:label="@string/app_name">
-        <activity android:label="@string/app_name" android:name="IdentifyDisease">
+        <activity android:label="@string/app_name" android:name="VisualDetection">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT"/>
-                <action android:name="MosaicDetection"></action>
+                <action android:name="VisualDetection"></action>
             </intent-filter>
         </activity>
-        <activity android:name="WhiteFlyDetect">
+        <activity android:name="SnapDetect">
             <intent-filter>
-                <action android:name="WhiteFlyCount"></action>
-                <category android:name="android.intent.category.DEFAULT"></category>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER"></category>
             </intent-filter>
         </activity>
-        <activity android:name="DashBoard"><intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter></activity>
-        <activity android:name="SnapIt" android:screenOrientation="landscape" ><intent-filter>
-                <action android:name="SnapWhiteFlyCount"></action>
+        <activity android:name="PestDetected"><intent-filter>
+                <action android:name="ParasiteDetected"></action>
                 <category android:name="android.intent.category.DEFAULT"></category>
             </intent-filter></activity>
+
     </application>
 </manifest>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--  This is our one standard application action (creating a new note). -->
+    <item android:alphabeticShortcut='s' android:title="Settings" android:id="@+id/menu_camera_settings">
+    </item>
+   <item android:title="Snap Diagnosis" android:id="@+id/menu_camera_snap_diagnosis">
+   </item><item android:alphabeticShortcut='c' android:title="Close" android:id="@+id/menu_camera_close">
+    </item>
+   
+</menu>

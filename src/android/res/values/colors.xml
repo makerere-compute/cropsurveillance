@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<color name="notepad_paper">#FFFFCC</color> <!-- name of color??? -->
+<color name="notepad_lines">#FF0000FF</color>
+<color name="notepad_margin">#90FF0000</color>
+<color name="notepad_text">#AA0000FF</color>
+<color name="background">#1A012E</color>
+<color name="menubackground">#FFFFCC</color>
+<color name="blueSideBar">#5490cc</color>
+<color name="OrangeSidebar">#CC6633</color>
+<color name="black">#000</color>
+<color name="white">#FFF</color>
+<color name="glass">#1FFF</color>
+<color name="thickglass">#3FFF</color>
+<color name="glassyorange">#33CC6633</color>
+<color name="semithick">#2FFF</color>
+<color name="Red">#AFF</color>
+<color name="Green">#FAF</color>
+
+</resources>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, IdentifyDisease!</string>
-    <string name="app_name">Crop Disease</string>
-    <string name="aidev">AI-DEV MAKERERE UNIVERSITY</string>
+    <string name="hello">Hello World, VisualDetection!</string>
+    <string name="app_name">Mobile Crop Surveillance</string>
+    <string name="camera_capture">Snap</string>
 </resources>
