@@ -34,19 +34,20 @@ public final class R {
         public static final int icon=0x7f020000;
     }
     public static final class id {
-        public static final int RadioImageC=0x7f070005;
-        public static final int button_camera_capture=0x7f070004;
-        public static final int camera_surface=0x7f070003;
-        public static final int menu_camera_auto_diagnosis=0x7f07000b;
-        public static final int menu_camera_close=0x7f07000c;
-        public static final int menu_camera_settings=0x7f07000a;
-        public static final int menu_camera_snap_diagnosis=0x7f07000d;
+        public static final int RadioImageC=0x7f070006;
+        public static final int button_camera_capture=0x7f070002;
+        public static final int camera_surface=0x7f070005;
+        public static final int menu_camera_auto_diagnosis=0x7f07000c;
+        public static final int menu_camera_close=0x7f07000d;
+        public static final int menu_camera_settings=0x7f07000b;
+        public static final int menu_camera_snap_diagnosis=0x7f07000e;
         public static final int message=0x7f070001;
-        public static final int pest=0x7f070002;
-        public static final int radio_high=0x7f070008;
-        public static final int radio_low=0x7f070006;
-        public static final int radio_normal=0x7f070007;
-        public static final int radio_super=0x7f070009;
+        public static final int original=0x7f070004;
+        public static final int pest=0x7f070003;
+        public static final int radio_high=0x7f070009;
+        public static final int radio_low=0x7f070007;
+        public static final int radio_normal=0x7f070008;
+        public static final int radio_super=0x7f07000a;
         public static final int time=0x7f070000;
     }
     public static final class layout {

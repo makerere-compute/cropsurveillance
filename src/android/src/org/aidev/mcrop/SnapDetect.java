@@ -168,7 +168,7 @@ OnClickListener {
 				//finish();
 				
 				Intent i = new Intent("ParasiteDetected");
-//				/i.putExtra("imagepath", imagepath);
+//				i.putExtra("imagepath", imagepath);
 				startActivity(i);
 
 			}

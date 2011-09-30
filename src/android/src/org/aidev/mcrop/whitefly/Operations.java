@@ -12,6 +12,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 
+import android.R.integer;
 import android.graphics.Color;
 import android.net.Uri;
 import android.widget.ImageView;
@@ -97,7 +98,7 @@ public class Operations {
 	}
 	
 	
-  private ArrayList findmatches(IplImage image,CvArr imbackproject_fly,CvArr imbackproject_leaf,CvArr imbackproject_leafarea) {
+  private ArrayList<int[]> findmatches(IplImage image,CvArr imbackproject_fly,CvArr imbackproject_leaf,CvArr imbackproject_leafarea) {
 	// Find the postions of  in an image
 	   int imagewidth = image.width();
 	    
@@ -105,7 +106,7 @@ public class Operations {
 	    int FLY_THRESHOLD = 20,
 	    LEAF_THRESHOLD = 30;
 	    
-	    ArrayList matches = null;
+	    ArrayList<int[]> matches = null;
 
 	   //Get the contours from the binary image
 	    int width = image.width();
@@ -171,7 +172,7 @@ public class Operations {
 	  
 }
   
-public ArrayList detect(IplImage im){
+public void detect(IplImage im){
       double leaf_hist_h_array[] = {0.000, 0.000, 0.000, 0.000, 0.003, 0.017, 0.051, 0.044, 0.258, 0.533, 0.075, 0.017, 0.002, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000};
       double leaf_hist_s_array[] = {0.000, 0.000, 0.003, 0.006, 0.008, 0.021, 0.029, 0.040, 0.076, 0.125, 0.165, 0.165, 0.130, 0.079, 0.051, 0.032, 0.019, 0.012, 0.009, 0.006, 0.005, 0.004, 0.003, 0.002, 0.002, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.000};
       double leaf_hist_v_array[] = {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.002, 0.004, 0.004, 0.006, 0.008, 0.024, 0.062, 0.062, 0.094, 0.111, 0.113, 0.101, 0.074, 0.072, 0.088, 0.080, 0.048, 0.019, 0.010, 0.007, 0.007, 0.004, 0.002, 0.000};
@@ -236,12 +237,30 @@ public ArrayList detect(IplImage im){
 	    IplImage imgray = cvCreateImage(cvGetSize(im),IPL_DEPTH_8U,1);
 	    cvCvtColor(im,imgray,CV_RGB2GRAY);
 	    //TODO cvCanny throws error
-	    cvCanny(imgray, imthreshold, 190, 255,255);
-	  
+	    cvCanny(imgray, imthreshold, 190, 255,3);
+	    cvSaveImage(
+				new File("/sdcard/mcrop/pest.jpg").getAbsolutePath(),
+				imgray);
 	    
 	    //# Find the matching points and highlight them
-	    ArrayList matchingcoords = findmatches(imthreshold,imbackproject_fly,imbackproject_leaf,imbackproject_leafarea);
-	    return matchingcoords;   
+	    ArrayList<int[]> matchingcoords = findmatches(imthreshold,imbackproject_fly,imbackproject_leaf,imbackproject_leafarea);
+	    
+	    if (matchingcoords != null) {
+	         //int total = keypoints.total();
+	            int total = matchingcoords.size();
+	           
+	            for (int[] match : matchingcoords) {
+	            	 int xcentre = match[0];
+	            	 int ycentre = match[1];
+	            	  CvPoint center =  new CvPoint();
+		                center.set(xcentre, ycentre);
+		                
+	            	 cvCircle(imgray,center ,10, CvScalar.GREEN, 255,0,0);
+	            	 
+				}
+	            
+	         
+	        }
 
   }
   

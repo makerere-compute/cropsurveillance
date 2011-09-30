@@ -41,6 +41,7 @@ public class PestDetected extends Activity {
 	TextView message;
 	TextView time;
 	ImageView img;
+	ImageView orig;
 
 	public static final int SUBSAMPLING_FACTOR = 1;
 
@@ -143,12 +144,14 @@ public class PestDetected extends Activity {
 			// Load the original image.
 			IplImage originalImage = cvLoadImage(new File(
 					"/sdcard/mcrop/rawimage.jpg").getAbsolutePath());
-			new File(new File("/sdcard/mcrop/rawimage.jpg").getAbsolutePath())
-					.delete();
+			//new File(new File("/sdcard/mcrop/rawimage.jpg").getAbsolutePath())
+			//		.delete();
 
 			// create a new image of the same size as the original one.
-			originalImage = IplImage.create(originalImage.width(),
-					originalImage.height(), IPL_DEPTH_8U, 3);
+			//originalImage = IplImage.create(originalImage.width(),
+			//		originalImage.height(), IPL_DEPTH_8U, 3);
+			
+			
 			// We convert the original image to grayscale.
 			//cvCvtColor(originalImage, originalImage, CV_BGR2GRAY);
 			// process
@@ -160,6 +163,8 @@ public class PestDetected extends Activity {
 					3);
 			cvResize(originalImage, ImageResized);
 			originalImage = ImageResized;
+			
+			
 
 		/*	// Need to load in any function from objdetect for some reason...
 			CvHaarFeature feat = new CvHaarFeature();
@@ -224,11 +229,10 @@ public class PestDetected extends Activity {
 		            }
 		        }
 */
-			new Operations().detect(ImageResized);
-			cvSaveImage(
-					new File("/sdcard/mcrop/pest.jpg").getAbsolutePath(),
-					originalImage);
-
+		new Operations().detect(ImageResized);
+		
+		 
+			
 			// matches.add(new Integer(1));
 
 			cvClearMemStorage(storage);
@@ -237,27 +241,31 @@ public class PestDetected extends Activity {
 			long elapse = end - start;
 			// save
 
-			cvReleaseImage(originalImage);
+			//cvReleaseImage(originalImage);
 			// read and display
 			img = (ImageView) findViewById(R.id.pest);
+			orig= (ImageView) findViewById(R.id.original);
 			message = (TextView) findViewById(R.id.message);
 			time = (TextView) findViewById(R.id.time);
 
 			time.setText("It took " + elapse/1000 + "secs");
 			if (matches.size() > 0) {
-				message.setText("Plasmodium Positive: " + matches.size()
+				message.setText("White Fly Detected: " + matches.size()
 						+ " out of" + keypoints.total());
 				message.setBackgroundColor(Color.RED);
 			} else {
-				message.setText("Plasmodium Negative");
+				message.setText("No White Fly Detected");
 				message.setBackgroundColor(Color.GREEN);
 			}
 
 			img.setImageURI(Uri.parse(new File("/sdcard/mcrop/pest.jpg")
 					.getAbsolutePath()));
+			
+			orig.setImageURI(Uri.parse(new File("/sdcard/mcrop/rawimage.jpg")
+			.getAbsolutePath()));
 
-			new File(new File("/sdcard/mcrop/pest.jpg").getAbsolutePath())
-					.delete();
+			//new File(new File("/sdcard/mcrop/pest.jpg").getAbsolutePath())
+				//	.delete();
 			
 			
 		} catch (Exception e) {
