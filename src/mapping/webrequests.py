@@ -13,7 +13,7 @@ def fetchdata():
     #development URL
     #url = "http://127.0.0.1:8888/formSubmissionsV?odkId=new_form1"
     #online URL
-    url = "http://cropmonitoring.appspot.com/formSubmissionsV?odkId=new_form1"
+    url = "http://cropmonitoring.appspot.com/formSubmissionsV?odkId=new_form2"
     #make url request and read content
     response = urllib2.urlopen(url)
     result = response.read()
@@ -24,9 +24,11 @@ def fetchdata():
     # lonlat is a list of coordinates [longitude. latitude]
     lonlat = numpy.zeros(shape=(len(rows)-1,2))
     #D are the corresponding disease rates (e.g. 0-5)
-    D = numpy.zeros(len(rows)-1,dtype=int)
+    D_cmd = numpy.zeros(len(rows)-1,dtype=int)
+    D_cbs = numpy.zeros(len(rows)-1,dtype=int)
+    D_cgm = numpy.zeros(len(rows)-1,dtype=int)
     
-    for i in range(len(rows)-1):                     
+    for i in range(1,len(rows)-1):                     
         #split the rows into columns 
         columns=rows[i].split(",");
         
@@ -46,26 +48,30 @@ def fetchdata():
         #image
         imageurl=columns[3];
         #gps                   
-        latitude=columns[4];
-        longitude=columns[5];
-        altitude=columns[6];
-        accurracy=columns[7]
-        #disease
-        disease=columns[8]
+        latitude=columns[9];
+        longitude=columns[10];
+        altitude=columns[11];
+        accurracy=columns[12]
+        '''
         rate=0
        
         #remove under score from rate
         if(columns[9].split('_')[1])>0:
-                rate=(columns[9].split('_')[1])                        
-        
-        D[i]=rate
-        lonlat[i]=numpy.array([longitude,latitude])
-        
+                rate=(columns[9].split('_')[1])   
+        '''
 
+        #disease
+        D_cmd[i-1]=int(columns[6])
+        D_cgm[i-1]=int(columns[7])
+        D_cbs[i-1]=int(columns[8])
+        lonlat[i-1]=numpy.array([longitude,latitude])
+        
     #print D[0]             
     #self.response.out.write(rate);      
     geodata['lonlat']=numpy.array(lonlat)
-    geodata['D']=numpy.array(D)
+    geodata['D_cmd']=numpy.array(D_cmd)
+    geodata['D_cgm']=numpy.array(D_cgm)
+    geodata['D_cbs']=numpy.array(D_cbs)
 
     # cache the data
     pkl_file = open(p['geodata_cache_filename'],'wb')

@@ -24,7 +24,9 @@ def getpointdata():
     X=geodata['lonlat']
 
     # D are the corresponding disease rates (e.g. 0-5)
-    D=geodata['D']
+    D_cmd=geodata['D_cmd']
+    D_cgm=geodata['D_cgm']
+    D_cbs=geodata['D_cbs']
 
     '''
     X = numpy.array([[ 32.63669052,   0.51917757],
@@ -40,7 +42,7 @@ def getpointdata():
     D = numpy.array([4, 5, 5, 3, 3, 2, 1, 1, 1, 1])
     '''
 
-    return X,D
+    return X,D_cmd,D_cgm,D_cbs
 
 def intensity_to_rgb(x,upperlim):
     '''
@@ -69,12 +71,13 @@ def intensity_to_rgb(x,upperlim):
 
     return r,g,b
 
-def savetiles(G):
+def savetiles(G,identifier):
     """
     Save a list of disease densities. 
 
     Input: GP, a Gaussian process or other density modelling object which can be queried
     for particular longitudes and latitudes.
+    Identifier specifies what is being saved, e.g. the specific disease.
     """
 
     xml_string = []
@@ -130,7 +133,7 @@ def savetiles(G):
             # save as an image
             pilImage = Image.fromarray(tileimg)
             if p['save_tile_image_files']:
-                filename = '%s/tile_%d_%d.png' % (p['tile_directory'],x,y)
+                filename = '%s/tile_%d_%d_%s.png' % (p['tile_directory'],x,y,identifier)
                 pilImage.save(filename)
 
             #save the tiles tp database          
@@ -150,7 +153,7 @@ def savetiles(G):
 
     xml_string.append('</tilelist>\n')
 
-    xml_file = file('%s/%s' % (p['tile_directory'], p['tile_metadata_filename']),'w')
+    xml_file = file('%s/%s_%s.xml' % (p['tile_directory'], p['tile_metadata_filename'],identifier),'w')
     for s in xml_string:
         xml_file.write(s)
     xml_file.close()

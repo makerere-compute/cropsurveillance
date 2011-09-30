@@ -5,22 +5,22 @@ def getparams():
     settings = {}
 
     # the edges of the map - currently all in Namulonge
-    settings['longitude_limit'] = [32.633, 32.639]
-    settings['latitude_limit'] = [0.516, 0.522]
+    settings['longitude_limit'] = [32.631, 32.642]
+    settings['latitude_limit'] = [0.514, 0.524]
 
     # how many tiles to generate (this is effectively the zoom level)
     settings['ntiles'] = [1, 1]
 
     # how many pixels per tile
-    settings['tilepixels'] = [100,100]
+    settings['tilepixels'] = [50,50]
 
     # how to scale inverse variance to an alpha value
-    settings['alphascaling'] = 20 
+    settings['alphascaling'] = 10 
 
     # Gaussian process hyperpriors (theta is the length scales - the higher
     # the number, the smoother the map. Sigma is observation noise.)
-    settings['theta'] = [.002, .002]
-    settings['sigma'] = [.1]
+    settings['theta'] = [.003, .003]
+    settings['sigma'] = [.3]
 
     # filename for calculated density points
     settings['filename'] = 'heatmappoints.csv'
@@ -42,6 +42,6 @@ def getparams():
     settings['tile_directory'] = '../../data/maptiles'
 
     # filename for storing tile details (lat/lon extents)
-    settings['tile_metadata_filename'] = 'tiles.xml'
+    settings['tile_metadata_filename'] = 'tiles'
 
     return settings
